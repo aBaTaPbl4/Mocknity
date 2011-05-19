@@ -3,7 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mocknity", "Mocknity\Mocknity.csproj", "{F5CFBBC2-3AED-47A9-8559-BB4E08B179DF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MocknityTests", "MocknityTests\MocknityTests.csproj", "{2AEE23DA-6DFD-45F8-BD9C-55CC204C4C3B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EDDD3055-6110-48AE-BB37-B54E4B6415AF}"
+	ProjectSection(SolutionItems) = preProject
+		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+		Mocknity.vsmdi = Mocknity.vsmdi
+	EndProjectSection
+EndProject
 Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = Mocknity.vsmdi
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -13,6 +24,10 @@ Global
 		{F5CFBBC2-3AED-47A9-8559-BB4E08B179DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5CFBBC2-3AED-47A9-8559-BB4E08B179DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5CFBBC2-3AED-47A9-8559-BB4E08B179DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AEE23DA-6DFD-45F8-BD9C-55CC204C4C3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AEE23DA-6DFD-45F8-BD9C-55CC204C4C3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AEE23DA-6DFD-45F8-BD9C-55CC204C4C3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AEE23DA-6DFD-45F8-BD9C-55CC204C4C3B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
