@@ -13,11 +13,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
 		Mocknity.vsmdi = Mocknity.vsmdi
 		Mocknity1.vsmdi = Mocknity1.vsmdi
+		Mocknity2.vsmdi = Mocknity2.vsmdi
 	EndProjectSection
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = Mocknity1.vsmdi
+		CategoryFile = Mocknity2.vsmdi
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

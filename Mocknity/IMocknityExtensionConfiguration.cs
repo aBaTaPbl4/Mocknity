@@ -15,6 +15,10 @@ namespace Mocknity
 
     bool IsTypeMapped(Type type);
 
+    object Get<T>();
+
+    void AddMock(Type type, object mock);
+
     MockRepository getRepository();
 
     IUnityContainer getContainer();

@@ -24,6 +24,8 @@ namespace Mocknity.Strategies.Structure
       if (buildKey.Type.IsInterface && !mocknity.getContainer().IsRegistered(buildKey.Type))
       {
         context.Existing = MockObject(buildKey.Type);
+        // register mock for handling
+        mocknity.AddMock(buildKey.Type, context.Existing); 
       }
     }
 

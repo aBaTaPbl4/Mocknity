@@ -15,6 +15,7 @@ namespace Mocknity
   public class MocknityContainerExtension : UnityContainerExtension, IMocknityExtensionConfiguration
   {
     Dictionary<Type, Type> strategiesMapping = new Dictionary<Type, Type>();
+    Dictionary<Type, object> mocks = new Dictionary<Type,object>();
     protected MockRepository repository;
 
     public MocknityContainerExtension(MockRepository repository)
@@ -62,6 +63,24 @@ namespace Mocknity
       {
         return false;
       }
+    }
+
+    public object Get<T>()
+    {
+      Type key = typeof(T);
+      if (this.mocks.ContainsKey(key))
+      {
+        return this.mocks[key];
+      }
+      else
+      {
+        return null;
+      }
+    }
+
+    public void AddMock(Type type, object mock)
+    {
+      this.mocks.Add(type, mock);
     }
 
     public bool IsTypeMapped(Type type)
