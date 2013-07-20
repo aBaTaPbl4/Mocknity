@@ -11,6 +11,9 @@ using Rhino.Mocks.Exceptions;
 
 namespace MocknityTests
 {
+
+    #region test classes
+
   public interface IFirstObject
   {
     string IntroduceYourself();
@@ -31,6 +34,17 @@ namespace MocknityTests
     }
   }
 
+  public interface IThirdObject
+  {
+    int MyProperty { get; set; }
+    string HelloWorld3();
+  }
+
+  public interface IFourthObject
+  {
+      void Foo();
+  }
+
   public class ObjectWithDependencies
   {
     public IFirstObject firstObject;
@@ -48,6 +62,24 @@ namespace MocknityTests
     }
   }
 
+  public class ObjectWithDependencies2
+  {
+      public IFirstObject firstObject;
+      public ISecondObject fourthObject;
+
+      public ObjectWithDependencies2(IFirstObject firstObject, IFourthObject fourthObject)
+      {
+          this.firstObject = firstObject;
+          this.fourthObject = this.fourthObject;
+      }
+
+      public string PokeSecond()
+      {
+          return this.fourthObject.HelloWorld();
+      }
+  }
+
+#endregion
 
   [TestClass]
   public class MocknityTests
@@ -61,7 +93,7 @@ namespace MocknityTests
     {
       container = new UnityContainer();
       mr = new MockRepository();
-      mocknity = new MocknityContainerExtension(mr);
+      mocknity = new MocknityContainerExtension(mr, true);
 
       container.AddExtension(mocknity);
     }
@@ -138,5 +170,29 @@ namespace MocknityTests
       mocknity.getRepository().VerifyAll();
     }
 
+    [TestMethod]
+    public void SetSameStrategyTwiceForDiffernetTypes__ExpectedWorks()
+    {
+        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
+        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(IThirdObject));
+        
+        var obj = container.Resolve<IThirdObject>();
+        Assert.IsNotNull(obj);
+        obj.MyProperty = 42;
+        Assert.AreEqual(42, obj.MyProperty);
+
+        var obj2 = container.Resolve<ISecondObject>();
+        Assert.IsNotNull(obj2);
+        obj2.MyProperty = 42;
+        Assert.AreEqual(42, obj2.MyProperty);
+    }
+
+    [TestMethod]
+    public void SetSameStrategyTwiceForDiffernetTypes__ExpectedWorks2()
+    {
+        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (ISecondObject));
+        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (IThirdObject));
+        var obj = container.Resolve<ObjectWithDependencies2>();
+    }
   }
 }

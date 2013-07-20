@@ -13,9 +13,14 @@ namespace Mocknity.Strategies.Rhino
   {
     public DynamicRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity) : base(mocknity) { }
 
-    public override object MockObject(Type type)
+    public override object CreateMockByInterface(Type type)
     {
       return this.repository.DynamicMock(type);
     }
+
+      public override object CreateMockByType(Type type)
+      {
+          throw new NotImplementedException();
+      }
   }
 }

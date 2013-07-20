@@ -10,9 +10,14 @@ namespace Mocknity.Strategies.Rhino
   {
     public StrictRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity) : base(mocknity) { }
 
-    public override object MockObject(Type type)
+    public override object CreateMockByInterface(Type type)
     {
       return this.repository.StrictMock(type);
     }
+
+      public override object CreateMockByType(Type type)
+      {
+          throw new NotImplementedException();
+      }
   }
 }

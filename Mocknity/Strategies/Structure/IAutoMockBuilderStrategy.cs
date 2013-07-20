@@ -7,6 +7,6 @@ namespace Mocknity.Strategies.Structure
 {
   public interface IAutoMockBuilderStrategy
   {
-    object MockObject(Type type);
+    object CreateMockByInterface(Type type);
   }
 }

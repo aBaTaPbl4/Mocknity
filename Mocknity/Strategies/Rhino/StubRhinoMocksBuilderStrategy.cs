@@ -11,9 +11,14 @@ namespace Mocknity.Strategies.Rhino
   {
     public StubRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity) : base(mocknity) { }
 
-    public override object MockObject(Type type)
+    public override object CreateMockByInterface(Type type)
     {
       return this.repository.Stub(type);
     }
+
+      public override object CreateMockByType(Type type)
+      {
+          throw new NotImplementedException();
+      }
   }
 }

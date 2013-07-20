@@ -22,5 +22,7 @@ namespace Mocknity
     MockRepository getRepository();
 
     IUnityContainer getContainer();
+
+    bool MockUnregisteredInterfaces { get; }
   }
 }
