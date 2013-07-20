@@ -9,7 +9,7 @@ namespace Mocknity.Strategies.Rhino
 {
   public class StubRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy<StubRhinoMocksBuilderStrategy>
   {
-    public StubRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity) : base(mocknity) { }
+      public StubRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType, bool isDefault = false) : base(mocknity, baseType, implType, isDefault) { }
 
     public override object CreateMockByInterface(Type type)
     {
@@ -18,7 +18,7 @@ namespace Mocknity.Strategies.Rhino
 
       public override object CreateMockByType(Type type)
       {
-          throw new NotImplementedException();
+          return this.repository.Stub(type, GetConstructorArguments(type));
       }
   }
 }

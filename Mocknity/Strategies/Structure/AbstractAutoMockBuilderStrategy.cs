@@ -10,12 +10,17 @@ namespace Mocknity.Strategies.Structure
     public abstract class AbstractAutoMockBuilderStrategy : BuilderStrategy, IAutoMockBuilderStrategy
     {
         protected IMocknityExtensionConfiguration mocknity;
-
-        public AbstractAutoMockBuilderStrategy() { }
-
-        public AbstractAutoMockBuilderStrategy(IMocknityExtensionConfiguration mocknity)
+        private Type _baseType;
+        private Type _ImplType;
+        private bool _isDefault;
+        private bool _onlyOneMockCreation;
+        public AbstractAutoMockBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType, bool isDefault = false, bool onlyOneMockCreation = true)
         {
             this.mocknity = mocknity;
+            _baseType = baseType;
+            _ImplType = implType ?? baseType;
+            _isDefault = isDefault;
+            _onlyOneMockCreation = onlyOneMockCreation;
         }
 
         public override void PreBuildUp(IBuilderContext context)
@@ -27,21 +32,42 @@ namespace Mocknity.Strategies.Structure
                 return;
             }
 
+            if (buildKey.Type != _baseType && buildKey.Type != _ImplType && !_isDefault)
+            {
+                return;
+            }
+
+            if (!String.IsNullOrEmpty(buildKey.Name))
+            {
+                //named instances not supported yet
+            }
+
             if (!mocknity.getContainer().IsRegistered(buildKey.Type))
             {
-                if (buildKey.Type.IsInterface)
+                Type typeToSearch = buildKey.Type.IsInterface ? buildKey.Type : _ImplType;
+                if (_onlyOneMockCreation && mocknity.Contains(typeToSearch))
                 {
-                    context.Existing = CreateMockByInterface(buildKey.Type);
+                    context.Existing = mocknity.Get(typeToSearch);
                 }
                 else
                 {
-                    context.Existing = CreateMockByType(buildKey.Type);
+                    RegisterMock(context, buildKey);
                 }
-
-                // register mock for handling
-                mocknity.AddMock(buildKey.Type, context.Existing);
                 context.BuildComplete = true;
             }
+        }
+
+        private void RegisterMock(IBuilderContext context, NamedTypeBuildKey buildKey)
+        {
+            if (buildKey.Type.IsInterface)
+            {
+                context.Existing = CreateMockByInterface(buildKey.Type);
+            }
+            else
+            {
+                context.Existing = CreateMockByType(_ImplType);
+            }
+            mocknity.AddMock(buildKey.Type, context.Existing);
         }
 
         #region IAutoMockBuilderStrategy Members

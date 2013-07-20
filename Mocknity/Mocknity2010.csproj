@@ -86,6 +86,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Strategies\Rhino\AbstractRhinoMocksBuilderStrategy.cs" />
     <Compile Include="Strategies\Rhino\DynamicRhinoMocksBuilderStrategy.cs" />
+    <Compile Include="Strategies\Rhino\PartialRhinoMocksBuilderStrategy.cs" />
     <Compile Include="Strategies\Rhino\StrictRhinoMocksBuilderStrategy.cs" />
     <Compile Include="Strategies\Rhino\StubRhinoMocksBuilderStrategy.cs" />
     <Compile Include="Strategies\Structure\AbstractAutoMockBuilderStrategy.cs" />

@@ -34,29 +34,35 @@ namespace Mocknity
             // register default builder strategy
             if (_mockUnregisteredInterfaces)
             {
-                _defaultStrategy = new DynamicRhinoMocksBuilderStrategy(this);
+                _defaultStrategy = new DynamicRhinoMocksBuilderStrategy(this, null, null, true);
                 Context.Strategies.Add(_defaultStrategy, UnityBuildStage.PreCreation);     
             }
         }
         
-        private IBuilderStrategy CreateBuilderStrategy<T>()
+        private IBuilderStrategy CreateBuilderStrategy<T>(Type baseType, Type implType, bool isDefault)
         {
             var builderImpl = typeof(T).GetInterface(typeof(IBuilderStrategy).Name);
             if (builderImpl != null)
             {
                 return
                     (IBuilderStrategy)
-                    Activator.CreateInstance(typeof(T), new object[] { this });
+                    Activator.CreateInstance(typeof(T), new object[] { this, baseType, implType, isDefault });
             }
             throw new ArgumentException("Type must implement IBuilderStrategy interface", "typeBase");
         }
 
         #region IMocknityExtensionConfiguration Members
 
+        /// <summary>
+        /// Set default strategy. Required using first, because clear all previous mappings
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         public void SetDefaultStrategy<T>()
         {
-            var strategy = CreateBuilderStrategy<T>();
+            var strategy = CreateBuilderStrategy<T>(null, null, true);
             _defaultStrategy = strategy;
+            mocks.Clear();
+            strategiesMapping.Clear();
             Context.Strategies.Clear();
             Context.Strategies.Add(_defaultStrategy, UnityBuildStage.PreCreation);
         }
@@ -68,7 +74,7 @@ namespace Mocknity
 
         public void SetStrategy<T>(Type typeBase, Type typeImpl)
         {
-            var strategy = CreateBuilderStrategy<T>();
+            var strategy = CreateBuilderStrategy<T>(typeBase, typeImpl, false);
             if (this.strategiesMapping.ContainsKey(typeBase))
             {
                 this.strategiesMapping.Remove(typeBase);
@@ -133,6 +139,11 @@ namespace Mocknity
         public object Get<T>()
         {
             Type key = typeof(T);
+            return Get(key);
+        }
+
+        public object Get(Type key)
+        {
             if (this.mocks.ContainsKey(key))
             {
                 return this.mocks[key];
@@ -141,6 +152,17 @@ namespace Mocknity
             {
                 return null;
             }
+        }
+
+        public bool Contains(Type key)
+        {
+            return this.mocks.ContainsKey(key);
+        }
+
+        public bool Contains<T>()
+        {
+            Type key = typeof(T);
+            return Contains(key);
         }
 
         public void AddMock(Type type, object mock)
