@@ -45,7 +45,12 @@ namespace MocknityTests
       void Foo();
   }
 
-  public class ObjectWithDependencies
+  public interface  IObjectWithDependencies
+  {
+      string Test();
+  }
+
+  public class ObjectWithDependencies : IObjectWithDependencies
   {
     public IFirstObject firstObject;
     public ISecondObject secondObject;
@@ -54,6 +59,11 @@ namespace MocknityTests
     {
       this.firstObject = firstObject;
       this.secondObject = secondObject;
+    }
+
+    public string Test()
+    {
+        return "test";
     }
 
     public string PokeSecond()
@@ -187,12 +197,132 @@ namespace MocknityTests
         Assert.AreEqual(42, obj2.MyProperty);
     }
 
-    [TestMethod]
-    public void SetSameStrategyTwiceForDiffernetTypes__ExpectedWorks2()
+    [TestMethod, Ignore]
+    public void CheckBuildersCount__RegisteredByUnity()
     {
         mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (ISecondObject));
         mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (IThirdObject));
         var obj = container.Resolve<ObjectWithDependencies2>();
+    }
+
+    public void CheckPartialMock(IFirstObject obj)
+    {
+        Assert.IsNotNull(obj);
+        var str = obj.IntroduceYourself();
+        Assert.IsFalse(String.IsNullOrEmpty(str));
+    }
+
+    [TestMethod]
+    public void ResolvePartialMock_HaveNoException()
+    {
+        mocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+        var obj = container.Resolve<IFirstObject>();;
+        CheckPartialMock(obj);
+        var obj2 = container.Resolve<FirstObjectImpl>();
+        CheckPartialMock(obj2);
+    }
+
+    [TestMethod]
+    public void ResolvePartialMock_Works_WhenHaveDependcies()
+    {
+        mocknity.RegisterStrictMock<IFirstObject>();
+        mocknity.RegisterStrictMock<ISecondObject>();
+        mocknity.RegisterPartialMock<ObjectWithDependencies>();
+
+        var obj = container.Resolve<ObjectWithDependencies>();
+        Assert.AreEqual("test", obj.Test());
+        obj.Stub(x => x.Test()).Return("t");
+        Assert.AreEqual("t", obj.Test());
+    }
+
+    [TestMethod]
+    public void ResolvePartialMock_Works_WhenRequestingBaseType()
+    {
+        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj = container.Resolve<IObjectWithDependencies>();
+        Assert.IsNotNull(obj);
+    }
+
+    [TestMethod]
+    public void ResolvePartialMock_IfCallTwice__MocksShouldBeSame()
+    {
+        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+
+        var obj1 = container.Resolve<IObjectWithDependencies>();
+        var obj2 = container.Resolve<IObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
+
+        obj1 = container.Resolve<ObjectWithDependencies>();
+        obj2 = container.Resolve<ObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
+    }
+      //DYNAMIC
+    [TestMethod]
+    public void ResolveDynamicMock_Works_WhenHaveDependcies()
+    {
+        mocknity.RegisterDynamicMock<IFirstObject>();
+        mocknity.RegisterDynamicMock<ISecondObject>();
+        mocknity.RegisterDynamicMock<ObjectWithDependencies>();
+
+        var obj = container.Resolve<ObjectWithDependencies>();
+        Assert.AreEqual(null, obj.Test());
+        obj.Stub(x => x.Test()).Return("t");
+        Assert.AreEqual("t", obj.Test());
+    }
+
+    [TestMethod]
+    public void ResolveDynamicMock_Works_WhenRequestingBaseType()
+    {
+        mocknity.RegisterDynamicMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj = container.Resolve<IObjectWithDependencies>();
+        Assert.IsNotNull(obj);
+    }
+
+    [TestMethod]
+    public void ResolveDynamicMock_IfCallTwice__MocksShouldBeSame()
+    {
+        mocknity.RegisterDynamicMock<IObjectWithDependencies, ObjectWithDependencies>();
+
+        var obj1 = container.Resolve<IObjectWithDependencies>();
+        var obj2 = container.Resolve<IObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
+
+        obj1 = container.Resolve<ObjectWithDependencies>();
+        obj2 = container.Resolve<ObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
+    }
+      //STRICT
+    [TestMethod, ExpectedException(typeof(Exception))]
+    public void ResolveStrictMock_Works_WhenHaveDependcies()
+    {
+        mocknity.RegisterStrictMock<IFirstObject>();
+        mocknity.RegisterStrictMock<ISecondObject>();
+        mocknity.RegisterStrictMock<ObjectWithDependencies>();
+
+        var obj = container.Resolve<ObjectWithDependencies>();
+        obj.Test();
+    }
+
+    [TestMethod]
+    public void ResolveStrictMock_Works_WhenRequestingBaseType()
+    {
+        mocknity.RegisterStrictMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj = container.Resolve<IObjectWithDependencies>();
+        Assert.IsNotNull(obj);
+    }
+
+    [TestMethod]
+    public void ResolveStrictMock_IfCallTwice__MocksShouldBeSame()
+    {
+        mocknity.RegisterStrictMock<IObjectWithDependencies, ObjectWithDependencies>();
+
+        var obj1 = container.Resolve<IObjectWithDependencies>();
+        var obj2 = container.Resolve<IObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
+
+        obj1 = container.Resolve<ObjectWithDependencies>();
+        obj2 = container.Resolve<ObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
     }
   }
 }

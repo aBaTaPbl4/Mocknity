@@ -8,7 +8,7 @@ namespace Mocknity.Strategies.Rhino
 {
   public class StrictRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy<StrictRhinoMocksBuilderStrategy>
   {
-    public StrictRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity) : base(mocknity) { }
+      public StrictRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType, bool isDefault = false) : base(mocknity, baseType, implType, isDefault) { }
 
     public override object CreateMockByInterface(Type type)
     {
@@ -17,7 +17,7 @@ namespace Mocknity.Strategies.Rhino
 
       public override object CreateMockByType(Type type)
       {
-          throw new NotImplementedException();
+          return this.repository.StrictMock(type, GetConstructorArguments(type));
       }
   }
 }
