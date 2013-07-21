@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Practices.Unity;
 using Microsoft.Practices.ObjectBuilder2;
+using Microsoft.Practices.Unity;
 
 namespace Mocknity.Strategies.Structure
 {
     public abstract class AbstractAutoMockBuilderStrategy : BuilderStrategy, IAutoMockBuilderStrategy
     {
+        private readonly Type _baseType;
+        private readonly Type _implType;
+        private readonly bool _isDefault;
+        private readonly bool _onlyOneMockCreation;
         protected IMocknityExtensionConfiguration mocknity;
-        private Type _baseType;
-        private Type _implType;
-        private bool _isDefault;
-        private bool _onlyOneMockCreation;
-        public AbstractAutoMockBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType, bool isDefault = false, bool onlyOneMockCreation = true)
+
+        public AbstractAutoMockBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType,
+                                               bool isDefault = false, bool onlyOneMockCreation = true)
         {
             this.mocknity = mocknity;
             _baseType = baseType;
@@ -23,9 +22,15 @@ namespace Mocknity.Strategies.Structure
             _onlyOneMockCreation = onlyOneMockCreation;
         }
 
+        #region IAutoMockBuilderStrategy Members
+
+        public abstract object CreateMockByInterface(Type type);
+
+        #endregion
+
         public override void PreBuildUp(IBuilderContext context)
         {
-            var buildKey = context.OriginalBuildKey;
+            NamedTypeBuildKey buildKey = context.OriginalBuildKey;
             bool needToRegisterIfUnknown = mocknity.MockUnregisteredInterfaces && buildKey.Type.IsInterface;
             if (!mocknity.IsTypeMapped(buildKey.Type) && !needToRegisterIfUnknown)
             {
@@ -78,7 +83,7 @@ namespace Mocknity.Strategies.Structure
             {
                 object mock = null;
                 bool arrivedInterfaceButWeHaveImplType = _implType != null && _implType != buildKey.Type;
-                if (arrivedInterfaceButWeHaveImplType && !mocknity.ContainsMock(_implType) )
+                if (arrivedInterfaceButWeHaveImplType && !mocknity.ContainsMock(_implType))
                 {
                     mock = CreateMockByType(_implType);
                     mocknity.AddMock(_implType, mock);
@@ -102,12 +107,6 @@ namespace Mocknity.Strategies.Structure
             mocknity.AddMock(buildKey.Type, context.Existing);
         }
 
-        #region IAutoMockBuilderStrategy Members
-
-        abstract public object CreateMockByInterface(Type type);
-
-        abstract public object CreateMockByType(Type type);
-
-        #endregion
+        public abstract object CreateMockByType(Type type);
     }
 }

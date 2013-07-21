@@ -1,32 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Rhino.Mocks;
 using Microsoft.Practices.Unity;
+using Rhino.Mocks;
 
 namespace Mocknity
 {
-  public interface IMocknityExtensionConfiguration
-  {
-    void SetStrategy<T>(Type type);
+    public interface IMocknityExtensionConfiguration
+    {
+        bool MockUnregisteredInterfaces { get; }
+        void SetStrategy<T>(Type type);
 
-    bool CheckStrategyMapping<T>(Type type);
+        bool CheckStrategyMapping<T>(Type type);
 
-    bool IsTypeMapped(Type type);
+        bool IsTypeMapped(Type type);
 
-    object Get<T>();
+        object Get<T>();
 
-    void AddMock(Type type, object mock);
+        void AddMock(Type type, object mock);
 
-    MockRepository getRepository();
+        MockRepository getRepository();
 
-    IUnityContainer getContainer();
+        IUnityContainer getContainer();
 
-    bool MockUnregisteredInterfaces { get; }
-      bool ContainsMock<T>();
-      bool ContainsMock(Type tp);
-      object Get(Type key);
-      bool ContainsMapping(Type key);
-  }
+        bool ContainsMock<T>();
+        bool ContainsMock(Type tp);
+        object Get(Type key);
+        bool ContainsMapping(Type key);
+    }
 }
