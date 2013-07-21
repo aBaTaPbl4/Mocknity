@@ -72,14 +72,22 @@ namespace Mocknity
             SetStrategy<T>(type, type);
         }
 
-        public void SetStrategy<T>(Type typeBase, Type typeImpl)
+        private void SetStrategy<T>(Type typeBase, Type typeImpl)
         {
             var strategy = CreateBuilderStrategy<T>(typeBase, typeImpl, false);
             if (this.strategiesMapping.ContainsKey(typeBase))
             {
                 this.strategiesMapping.Remove(typeBase);
             }
+            if (this.strategiesMapping.ContainsKey(typeImpl))
+            {
+                this.strategiesMapping.Remove(typeImpl);
+            }
             this.strategiesMapping.Add(typeBase, typeof(T));
+            if (typeBase != typeImpl)
+            {
+                strategiesMapping.Add(typeImpl, typeof(T));
+            }
             Context.Strategies.Add(strategy, UnityBuildStage.PreCreation);
 
         }
@@ -153,16 +161,20 @@ namespace Mocknity
                 return null;
             }
         }
+        public bool ContainsMapping(Type key)
+        {
+            return strategiesMapping.ContainsKey(key);
+        }
 
-        public bool Contains(Type key)
+        public bool ContainsMock(Type key)
         {
             return this.mocks.ContainsKey(key);
         }
 
-        public bool Contains<T>()
+        public bool ContainsMock<T>()
         {
             Type key = typeof(T);
-            return Contains(key);
+            return ContainsMock(key);
         }
 
         public void AddMock(Type type, object mock)

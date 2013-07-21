@@ -61,9 +61,14 @@ namespace MocknityTests
       this.secondObject = secondObject;
     }
 
-    public string Test()
+    public virtual string Test()
     {
         return "test";
+    }
+
+    public virtual string Foo()
+    {
+        return "foo";
     }
 
     public string PokeSecond()
@@ -101,11 +106,15 @@ namespace MocknityTests
     [TestInitialize()]
     public void TestInitialize()
     {
-      container = new UnityContainer();
-      mr = new MockRepository();
-      mocknity = new MocknityContainerExtension(mr, true);
+        InitPrivateMembers(true);
+    }
 
-      container.AddExtension(mocknity);
+    private void InitPrivateMembers(bool mockUnregisteredInterfaces)
+    {
+        container = new UnityContainer();
+        mr = new MockRepository();
+        mocknity = new MocknityContainerExtension(mr, mockUnregisteredInterfaces);
+        container.AddExtension(mocknity);        
     }
 
     [TestCleanup()]
@@ -197,11 +206,20 @@ namespace MocknityTests
         Assert.AreEqual(42, obj2.MyProperty);
     }
 
-    [TestMethod, Ignore]
-    public void CheckBuildersCount__RegisteredByUnity()
+    [TestMethod]
+    public void IfMockingUnregegisteredInterfacesIs_ON_Work_If_Interfaces_Unregistered()
     {
         mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (ISecondObject));
         mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (IThirdObject));
+        var obj = container.Resolve<ObjectWithDependencies2>();
+    }
+
+    [TestMethod, ExpectedException(typeof(Microsoft.Practices.Unity.ResolutionFailedException))]
+    public void IfMockingUnregegisteredInterfacesIs_OFF_NOT_Work_If_Interfaces_Unregistered()
+    {
+        InitPrivateMembers(false);
+        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
+        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(IThirdObject));
         var obj = container.Resolve<ObjectWithDependencies2>();
     }
 
@@ -217,10 +235,13 @@ namespace MocknityTests
     {
         mocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
         var obj = container.Resolve<IFirstObject>();;
+        obj.Replay();
         CheckPartialMock(obj);
         var obj2 = container.Resolve<FirstObjectImpl>();
+        obj2.Replay();
         CheckPartialMock(obj2);
     }
+
 
     [TestMethod]
     public void ResolvePartialMock_Works_WhenHaveDependcies()
@@ -230,9 +251,11 @@ namespace MocknityTests
         mocknity.RegisterPartialMock<ObjectWithDependencies>();
 
         var obj = container.Resolve<ObjectWithDependencies>();
-        Assert.AreEqual("test", obj.Test());
-        obj.Stub(x => x.Test()).Return("t");
-        Assert.AreEqual("t", obj.Test());
+        obj.Replay();
+        Assert.AreEqual("foo", obj.Foo());
+        obj.Stub(x => x.Foo()).Return("f").Repeat.Any();
+        obj.Replay();
+        Assert.AreEqual("f", obj.Foo());
     }
 
     [TestMethod]
@@ -244,16 +267,41 @@ namespace MocknityTests
     }
 
     [TestMethod]
-    public void ResolvePartialMock_IfCallTwice__MocksShouldBeSame()
+    public void ResolvePartialMock_IfCallTwiceForInterface__MocksShouldBeSame()
     {
         mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
 
         var obj1 = container.Resolve<IObjectWithDependencies>();
         var obj2 = container.Resolve<IObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
+    }
 
-        obj1 = container.Resolve<ObjectWithDependencies>();
-        obj2 = container.Resolve<ObjectWithDependencies>();
+    [TestMethod]
+    public void ResolvePartialMock_IfCallTwiceForInterfaceAndImpl__MocksShouldBeSame()
+    {
+        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+
+        var obj1 = container.Resolve<IObjectWithDependencies>();
+        var obj2 = container.Resolve<ObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
+    }
+
+    [TestMethod]
+    public void ResolvePartialMock_IfCallTwiceForInterfaceAndImpl_ReverseOrder__MocksShouldBeSame()
+    {
+        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj2 = container.Resolve<ObjectWithDependencies>();
+        var obj1 = container.Resolve<IObjectWithDependencies>();
+        Assert.AreEqual(obj1, obj2);
+    }
+
+    [TestMethod]
+    public void ResolvePartialMock_IfCallTwiceForImpl__MocksShouldBeSame()
+    {
+        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+
+        var obj1 = container.Resolve<ObjectWithDependencies>();
+        var obj2 = container.Resolve<ObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
     }
       //DYNAMIC
@@ -266,8 +314,9 @@ namespace MocknityTests
 
         var obj = container.Resolve<ObjectWithDependencies>();
         Assert.AreEqual(null, obj.Test());
-        obj.Stub(x => x.Test()).Return("t");
-        Assert.AreEqual("t", obj.Test());
+        obj.Stub(x => x.Test()).Return("t").Repeat.Any(); 
+        obj.Replay();
+        Assert.AreEqual("t", obj.Test());            
     }
 
     [TestMethod]
@@ -292,15 +341,15 @@ namespace MocknityTests
         Assert.AreEqual(obj1, obj2);
     }
       //STRICT
-    [TestMethod, ExpectedException(typeof(Exception))]
+    [TestMethod, ExpectedException(typeof(Rhino.Mocks.Exceptions.ExpectationViolationException))]
     public void ResolveStrictMock_Works_WhenHaveDependcies()
     {
         mocknity.RegisterStrictMock<IFirstObject>();
         mocknity.RegisterStrictMock<ISecondObject>();
         mocknity.RegisterStrictMock<ObjectWithDependencies>();
-
         var obj = container.Resolve<ObjectWithDependencies>();
-        obj.Test();
+        mr.ReplayAll();
+        var result = obj.Test();
     }
 
     [TestMethod]

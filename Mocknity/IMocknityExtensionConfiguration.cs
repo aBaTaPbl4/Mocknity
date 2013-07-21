@@ -24,8 +24,9 @@ namespace Mocknity
     IUnityContainer getContainer();
 
     bool MockUnregisteredInterfaces { get; }
-      bool Contains<T>();
-      bool Contains(Type tp);
+      bool ContainsMock<T>();
+      bool ContainsMock(Type tp);
       object Get(Type key);
+      bool ContainsMapping(Type key);
   }
 }

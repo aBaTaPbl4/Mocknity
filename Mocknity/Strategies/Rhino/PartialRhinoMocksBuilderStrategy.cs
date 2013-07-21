@@ -23,7 +23,8 @@ namespace Mocknity.Strategies.Rhino
 
         public override object CreateMockByType(Type type)
         {
-            return this.repository.PartialMock(type, GetConstructorArguments(type));
+            object[] parms = GetConstructorArguments(type);
+            return this.repository.PartialMock(type, parms );
         }
 
     }
