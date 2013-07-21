@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mocknity", "Mocknity\Mocknity2010.csproj", "{F5CFBBC2-3AED-47A9-8559-BB4E08B179DF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mocknity2010", "Mocknity\Mocknity2010.csproj", "{F5CFBBC2-3AED-47A9-8559-BB4E08B179DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MocknityTests", "MocknityTests\MocknityTests2010.csproj", "{2AEE23DA-6DFD-45F8-BD9C-55CC204C4C3B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MocknityTests2010", "MocknityTests\MocknityTests2010.csproj", "{2AEE23DA-6DFD-45F8-BD9C-55CC204C4C3B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{F5CFBBC2-3AED-47A9-8559-BB4E08B179DF} = {F5CFBBC2-3AED-47A9-8559-BB4E08B179DF}
 	EndProjectSection
@@ -28,5 +28,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
 	EndGlobalSection
 EndGlobal
