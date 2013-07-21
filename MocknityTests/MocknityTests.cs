@@ -99,9 +99,9 @@ namespace MocknityTests
   [TestClass]
   public class MocknityTests
   {
-    IUnityContainer container;
-    MocknityContainerExtension mocknity;
-    MockRepository mr;
+    IUnityContainer _ioc;
+    MocknityContainerExtension _mocknity;
+    MockRepository _mocks;
 
     [TestInitialize()]
     public void TestInitialize()
@@ -111,22 +111,22 @@ namespace MocknityTests
 
     private void InitPrivateMembers(bool mockUnregisteredInterfaces)
     {
-        container = new UnityContainer();
-        mr = new MockRepository();
-        mocknity = new MocknityContainerExtension(mr, mockUnregisteredInterfaces);
-        container.AddExtension(mocknity);        
+        _ioc = new UnityContainer();
+        _mocks = new MockRepository();
+        _mocknity = new MocknityContainerExtension(_mocks, mockUnregisteredInterfaces);
+        _ioc.AddExtension(_mocknity);        
     }
 
     [TestCleanup()]
     public void TestCleanup()
     {
-      container.Dispose();
+      _ioc.Dispose();
     }
 
     [TestMethod]
     public void ResolveObject__MockDependenciesInitiated()
     {
-      ObjectWithDependencies od = container.Resolve<ObjectWithDependencies>();
+      ObjectWithDependencies od = _ioc.Resolve<ObjectWithDependencies>();
 
       Assert.IsNotNull(od.firstObject);
       Assert.IsNotNull(od.secondObject);
@@ -135,8 +135,8 @@ namespace MocknityTests
     [TestMethod]
     public void ResolveObjectWithSpecificImpl__OneDependencyIsNotMocked()
     {
-      container.RegisterType<IFirstObject, FirstObjectImpl>();
-      ObjectWithDependencies od = container.Resolve<ObjectWithDependencies>();
+      _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+      ObjectWithDependencies od = _ioc.Resolve<ObjectWithDependencies>();
 
       Assert.IsInstanceOfType(od.firstObject, typeof(FirstObjectImpl));
       Assert.IsNotNull(od.secondObject);
@@ -145,62 +145,62 @@ namespace MocknityTests
     [TestMethod]
     public void ResolveObjectWithExpectedCall__GetDesiredResult()
     {
-      ObjectWithDependencies od = container.Resolve<ObjectWithDependencies>();
+      ObjectWithDependencies od = _ioc.Resolve<ObjectWithDependencies>();
 
       Expect.Call(od.secondObject.HelloWorld()).Return("I'm the first of none");
-      mocknity.getRepository().ReplayAll();
+      _mocknity.getRepository().ReplayAll();
       Assert.AreEqual("I'm the first of none", od.PokeSecond());
-      mocknity.getRepository().VerifyAll();
+      _mocknity.getRepository().VerifyAll();
     }
 
     [TestMethod]
     [ExpectedException(typeof(ExpectationViolationException))]
     public void SecondObjectIsAStrictMock__ExceptionThrownOnCallingNotExpectedMethod()
     {
-      mocknity.SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(ISecondObject));
-      ObjectWithDependencies od = container.Resolve<ObjectWithDependencies>();
+      _mocknity.SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(ISecondObject));
+      ObjectWithDependencies od = _ioc.Resolve<ObjectWithDependencies>();
 
-      mocknity.getRepository().ReplayAll();
+      _mocknity.getRepository().ReplayAll();
       od.secondObject.HelloWorld();
-      mocknity.getRepository().VerifyAll();
+      _mocknity.getRepository().VerifyAll();
     }
 
     [TestMethod]
     public void SecondObjectIsAStub__CanChangeProperties()
     {
-      mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
-      ObjectWithDependencies od = container.Resolve<ObjectWithDependencies>();
+      _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
+      ObjectWithDependencies od = _ioc.Resolve<ObjectWithDependencies>();
 
-      mocknity.getRepository().ReplayAll();
+      _mocknity.getRepository().ReplayAll();
       od.secondObject.MyProperty = 42;
       Assert.AreEqual(42, od.secondObject.MyProperty);
-      mocknity.getRepository().VerifyAll();
+      _mocknity.getRepository().VerifyAll();
     }
 
     [TestMethod]
     public void SecondObjectIsADynamicCall__AcceptsUnexpectedCall()
     {
       // dynamic mocking is a default strategy in mocknity
-      ObjectWithDependencies od = container.Resolve<ObjectWithDependencies>();
+      ObjectWithDependencies od = _ioc.Resolve<ObjectWithDependencies>();
 
-      mocknity.getRepository().ReplayAll();
+      _mocknity.getRepository().ReplayAll();
       // doesn't raise exceptions
       od.secondObject.HelloWorld();
-      mocknity.getRepository().VerifyAll();
+      _mocknity.getRepository().VerifyAll();
     }
 
     [TestMethod]
     public void SetSameStrategyTwiceForDiffernetTypes__ExpectedWorks()
     {
-        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
-        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(IThirdObject));
+        _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
+        _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(IThirdObject));
         
-        var obj = container.Resolve<IThirdObject>();
+        var obj = _ioc.Resolve<IThirdObject>();
         Assert.IsNotNull(obj);
         obj.MyProperty = 42;
         Assert.AreEqual(42, obj.MyProperty);
 
-        var obj2 = container.Resolve<ISecondObject>();
+        var obj2 = _ioc.Resolve<ISecondObject>();
         Assert.IsNotNull(obj2);
         obj2.MyProperty = 42;
         Assert.AreEqual(42, obj2.MyProperty);
@@ -209,18 +209,18 @@ namespace MocknityTests
     [TestMethod]
     public void IfMockingUnregegisteredInterfacesIs_ON_Work_If_Interfaces_Unregistered()
     {
-        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (ISecondObject));
-        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (IThirdObject));
-        var obj = container.Resolve<ObjectWithDependencies2>();
+        _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (ISecondObject));
+        _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (IThirdObject));
+        var obj = _ioc.Resolve<ObjectWithDependencies2>();
     }
 
     [TestMethod, ExpectedException(typeof(Microsoft.Practices.Unity.ResolutionFailedException))]
     public void IfMockingUnregegisteredInterfacesIs_OFF_NOT_Work_If_Interfaces_Unregistered()
     {
         InitPrivateMembers(false);
-        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
-        mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(IThirdObject));
-        var obj = container.Resolve<ObjectWithDependencies2>();
+        _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(ISecondObject));
+        _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(IThirdObject));
+        var obj = _ioc.Resolve<ObjectWithDependencies2>();
     }
 
     public void CheckPartialMock(IFirstObject obj)
@@ -233,24 +233,32 @@ namespace MocknityTests
     [TestMethod]
     public void ResolvePartialMock_HaveNoException()
     {
-        mocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
-        var obj = container.Resolve<IFirstObject>();;
+        _mocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+        var obj = _ioc.Resolve<IFirstObject>();;
         obj.Replay();
         CheckPartialMock(obj);
-        var obj2 = container.Resolve<FirstObjectImpl>();
+        var obj2 = _ioc.Resolve<FirstObjectImpl>();
         obj2.Replay();
         CheckPartialMock(obj2);
     }
 
-
     [TestMethod]
+    public void ResolveObjectThanWasNotRegistered_ShouldWorks_WhenHaveDependcies()
+    {
+        _mocknity.RegisterDynamicMock<IFirstObject>();
+        _mocknity.RegisterDynamicMock<ISecondObject>();
+        var obj = _ioc.Resolve<ObjectWithDependencies>();
+        Assert.IsNotNull(obj);
+    }
+
+      [TestMethod]
     public void ResolvePartialMock_Works_WhenHaveDependcies()
     {
-        mocknity.RegisterStrictMock<IFirstObject>();
-        mocknity.RegisterStrictMock<ISecondObject>();
-        mocknity.RegisterPartialMock<ObjectWithDependencies>();
+        _mocknity.RegisterStrictMock<IFirstObject>();
+        _mocknity.RegisterStrictMock<ISecondObject>();
+        _mocknity.RegisterPartialMock<ObjectWithDependencies>();
 
-        var obj = container.Resolve<ObjectWithDependencies>();
+        var obj = _ioc.Resolve<ObjectWithDependencies>();
         obj.Replay();
         Assert.AreEqual("foo", obj.Foo());
         obj.Stub(x => x.Foo()).Return("f").Repeat.Any();
@@ -261,58 +269,58 @@ namespace MocknityTests
     [TestMethod]
     public void ResolvePartialMock_Works_WhenRequestingBaseType()
     {
-        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
-        var obj = container.Resolve<IObjectWithDependencies>();
+        _mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj = _ioc.Resolve<IObjectWithDependencies>();
         Assert.IsNotNull(obj);
     }
 
     [TestMethod]
     public void ResolvePartialMock_IfCallTwiceForInterface__MocksShouldBeSame()
     {
-        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+        _mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
 
-        var obj1 = container.Resolve<IObjectWithDependencies>();
-        var obj2 = container.Resolve<IObjectWithDependencies>();
+        var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+        var obj2 = _ioc.Resolve<IObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
     }
 
     [TestMethod]
     public void ResolvePartialMock_IfCallTwiceForInterfaceAndImpl__MocksShouldBeSame()
     {
-        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+        _mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
 
-        var obj1 = container.Resolve<IObjectWithDependencies>();
-        var obj2 = container.Resolve<ObjectWithDependencies>();
+        var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+        var obj2 = _ioc.Resolve<ObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
     }
 
     [TestMethod]
     public void ResolvePartialMock_IfCallTwiceForInterfaceAndImpl_ReverseOrder__MocksShouldBeSame()
     {
-        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
-        var obj2 = container.Resolve<ObjectWithDependencies>();
-        var obj1 = container.Resolve<IObjectWithDependencies>();
+        _mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+        var obj1 = _ioc.Resolve<IObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
     }
 
     [TestMethod]
     public void ResolvePartialMock_IfCallTwiceForImpl__MocksShouldBeSame()
     {
-        mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
+        _mocknity.RegisterPartialMock<IObjectWithDependencies, ObjectWithDependencies>();
 
-        var obj1 = container.Resolve<ObjectWithDependencies>();
-        var obj2 = container.Resolve<ObjectWithDependencies>();
+        var obj1 = _ioc.Resolve<ObjectWithDependencies>();
+        var obj2 = _ioc.Resolve<ObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
     }
       //DYNAMIC
     [TestMethod]
     public void ResolveDynamicMock_Works_WhenHaveDependcies()
     {
-        mocknity.RegisterDynamicMock<IFirstObject>();
-        mocknity.RegisterDynamicMock<ISecondObject>();
-        mocknity.RegisterDynamicMock<ObjectWithDependencies>();
+        _mocknity.RegisterDynamicMock<IFirstObject>();
+        _mocknity.RegisterDynamicMock<ISecondObject>();
+        _mocknity.RegisterDynamicMock<ObjectWithDependencies>();
 
-        var obj = container.Resolve<ObjectWithDependencies>();
+        var obj = _ioc.Resolve<ObjectWithDependencies>();
         Assert.AreEqual(null, obj.Test());
         obj.Stub(x => x.Test()).Return("t").Repeat.Any(); 
         obj.Replay();
@@ -322,55 +330,55 @@ namespace MocknityTests
     [TestMethod]
     public void ResolveDynamicMock_Works_WhenRequestingBaseType()
     {
-        mocknity.RegisterDynamicMock<IObjectWithDependencies, ObjectWithDependencies>();
-        var obj = container.Resolve<IObjectWithDependencies>();
+        _mocknity.RegisterDynamicMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj = _ioc.Resolve<IObjectWithDependencies>();
         Assert.IsNotNull(obj);
     }
 
     [TestMethod]
     public void ResolveDynamicMock_IfCallTwice__MocksShouldBeSame()
     {
-        mocknity.RegisterDynamicMock<IObjectWithDependencies, ObjectWithDependencies>();
+        _mocknity.RegisterDynamicMock<IObjectWithDependencies, ObjectWithDependencies>();
 
-        var obj1 = container.Resolve<IObjectWithDependencies>();
-        var obj2 = container.Resolve<IObjectWithDependencies>();
+        var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+        var obj2 = _ioc.Resolve<IObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
 
-        obj1 = container.Resolve<ObjectWithDependencies>();
-        obj2 = container.Resolve<ObjectWithDependencies>();
+        obj1 = _ioc.Resolve<ObjectWithDependencies>();
+        obj2 = _ioc.Resolve<ObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
     }
       //STRICT
     [TestMethod, ExpectedException(typeof(Rhino.Mocks.Exceptions.ExpectationViolationException))]
     public void ResolveStrictMock_Works_WhenHaveDependcies()
     {
-        mocknity.RegisterStrictMock<IFirstObject>();
-        mocknity.RegisterStrictMock<ISecondObject>();
-        mocknity.RegisterStrictMock<ObjectWithDependencies>();
-        var obj = container.Resolve<ObjectWithDependencies>();
-        mr.ReplayAll();
+        _mocknity.RegisterStrictMock<IFirstObject>();
+        _mocknity.RegisterStrictMock<ISecondObject>();
+        _mocknity.RegisterStrictMock<ObjectWithDependencies>();
+        var obj = _ioc.Resolve<ObjectWithDependencies>();
+        _mocks.ReplayAll();
         var result = obj.Test();
     }
 
     [TestMethod]
     public void ResolveStrictMock_Works_WhenRequestingBaseType()
     {
-        mocknity.RegisterStrictMock<IObjectWithDependencies, ObjectWithDependencies>();
-        var obj = container.Resolve<IObjectWithDependencies>();
+        _mocknity.RegisterStrictMock<IObjectWithDependencies, ObjectWithDependencies>();
+        var obj = _ioc.Resolve<IObjectWithDependencies>();
         Assert.IsNotNull(obj);
     }
 
     [TestMethod]
     public void ResolveStrictMock_IfCallTwice__MocksShouldBeSame()
     {
-        mocknity.RegisterStrictMock<IObjectWithDependencies, ObjectWithDependencies>();
+        _mocknity.RegisterStrictMock<IObjectWithDependencies, ObjectWithDependencies>();
 
-        var obj1 = container.Resolve<IObjectWithDependencies>();
-        var obj2 = container.Resolve<IObjectWithDependencies>();
+        var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+        var obj2 = _ioc.Resolve<IObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
 
-        obj1 = container.Resolve<ObjectWithDependencies>();
-        obj2 = container.Resolve<ObjectWithDependencies>();
+        obj1 = _ioc.Resolve<ObjectWithDependencies>();
+        obj2 = _ioc.Resolve<ObjectWithDependencies>();
         Assert.AreEqual(obj1, obj2);
     }
   }
