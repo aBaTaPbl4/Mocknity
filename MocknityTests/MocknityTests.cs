@@ -389,5 +389,22 @@ namespace MocknityTests
             obj2 = _ioc.Resolve<ObjectWithDependencies>();
             Assert.AreEqual(obj1, obj2);
         }
+
+        [TestMethod]
+        public void AutoReplay_If_True__Test()
+        {
+            _mocknity.RegisterPartialMock<ObjectWithDependencies>();
+            var obj = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreEqual("foo", obj.Foo());
+        }
+
+        [TestMethod]
+        public void AutoReplay_If_False__Test()
+        {
+            _mocknity.AutoReplayPartialMocks = false;
+            _mocknity.RegisterPartialMock<ObjectWithDependencies>();
+            var obj = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.IsNull(obj.Foo());
+        }
     }
 }

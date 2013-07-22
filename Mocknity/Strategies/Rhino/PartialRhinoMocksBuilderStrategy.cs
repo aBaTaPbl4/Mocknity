@@ -1,4 +1,5 @@
 ﻿using System;
+using Rhino.Mocks;
 
 namespace Mocknity.Strategies.Rhino
 {
@@ -18,7 +19,12 @@ namespace Mocknity.Strategies.Rhino
         public override object CreateMockByType(Type type)
         {
             object[] parms = GetConstructorArguments(type);
-            return repository.PartialMock(type, parms);
+            var mock = repository.PartialMock(type, parms);
+            if (mocknity.AutoReplayPartialMocks)
+            {
+                mock.Replay();    
+            }            
+            return mock;
         }
     }
 }

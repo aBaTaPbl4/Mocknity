@@ -7,6 +7,7 @@ namespace Mocknity
     public interface IMocknityExtensionConfiguration
     {
         bool MockUnregisteredInterfaces { get; }
+        bool AutoReplayPartialMocks { get; set; }
         void SetStrategy<T>(Type type);
 
         bool CheckStrategyMapping<T>(Type type);

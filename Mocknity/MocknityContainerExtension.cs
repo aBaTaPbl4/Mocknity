@@ -20,6 +20,7 @@ namespace Mocknity
         {
             this.repository = repository;
             _mockUnregisteredInterfaces = mockUnregisteredInterfaces;
+            AutoReplayPartialMocks = true;
         }
 
         #region IMocknityExtensionConfiguration Members
@@ -100,6 +101,7 @@ namespace Mocknity
             get { return _mockUnregisteredInterfaces; }
         }
 
+        public bool AutoReplayPartialMocks { get; set; }
         #endregion
 
         protected override void Initialize()
