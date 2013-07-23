@@ -406,5 +406,41 @@ namespace MocknityTests
             var obj = _ioc.Resolve<ObjectWithDependencies>();
             Assert.IsNull(obj.Foo());
         }
+
+        [TestMethod]
+        public void RegisterPartialMockType_ImplVSImpl__Test()
+        {
+            _mocknity.RegisterPartialMockType<ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);  
+        }
+
+        [TestMethod]
+        public void RegisterPartialMockType_ImplVSInterface__Test()
+        {
+            _mocknity.RegisterPartialMockType<IObjectWithDependencies, ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        //[TestMethod]
+        //public void RegisterPartialNamedMock_NamedAndDefaultInstances__AreDifferent()
+        //{
+        //    _mocknity.RegisterPartialMock<ObjectWithDependencies>();
+        //    _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
+        //    var obj1 = _ioc.Resolve<ObjectWithDependencies>("test");
+        //    var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+        //    Assert.AreNotEqual(obj1, obj2);
+        //}
+
+        //[TestMethod, ExpectedException(typeof (ResolutionFailedException))]
+        //public void RegisterPartialNamedMock_DefaultResolveShouldFailed__Test()
+        //{
+        //    _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
+        //    _ioc.Resolve<ObjectWithDependencies>();
+        //}
+
     }
 }

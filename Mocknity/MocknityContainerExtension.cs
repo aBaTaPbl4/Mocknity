@@ -102,6 +102,8 @@ namespace Mocknity
         }
 
         public bool AutoReplayPartialMocks { get; set; }
+
+
         #endregion
 
         protected override void Initialize()
@@ -191,6 +193,16 @@ namespace Mocknity
         public void RegisterPartialMock<TType>()
         {
             SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof (TType));
+        }
+
+        public void RegisterPartialMockType<TBaseType, TType>()
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof (TBaseType), typeof(TType));
+        }
+
+        public void RegisterPartialMockType<TType>()
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType));
         }
 
         public void RegisterStub<TType>()
