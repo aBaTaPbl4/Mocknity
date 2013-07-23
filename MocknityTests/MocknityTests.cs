@@ -27,7 +27,7 @@ namespace MocknityTests
     {
         #region IFirstObject Members
 
-        public string IntroduceYourself()
+        public virtual string IntroduceYourself()
         {
             return "I'm the first of all";
         }
@@ -99,6 +99,27 @@ namespace MocknityTests
         }
     }
 
+
+    public class FirstObjectImpl2 : IFirstObject
+    {
+        private ISecondObject _obj;
+
+        public FirstObjectImpl2(ISecondObject obj)
+        {
+            _obj = obj;
+        }
+
+        public virtual string IntroduceYourself()
+        {
+            return "I'm the first of all";
+        }
+
+    }
+
+    public class EmptyType
+    {
+        
+    }
     #endregion
 
     [TestClass]
@@ -214,8 +235,8 @@ namespace MocknityTests
         [TestMethod]
         public void IfMockingUnregegisteredInterfacesIs_ON_Work_If_Interfaces_Unregistered()
         {
-            _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (ISecondObject));
-            _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (IThirdObject));
+            _mocknity.RegisterStub<ISecondObject>();
+            _mocknity.RegisterStub<IThirdObject>();
             var obj = _ioc.Resolve<ObjectWithDependencies2>();
         }
 
@@ -223,9 +244,57 @@ namespace MocknityTests
         public void IfMockingUnregegisteredInterfacesIs_OFF_NOT_Work_If_Interfaces_Unregistered()
         {
             InitPrivateMembers(false);
-            _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (ISecondObject));
-            _mocknity.SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (IThirdObject));
+            _mocknity.RegisterStub<ISecondObject>();
+            _mocknity.RegisterStub<IThirdObject>();
             var obj = _ioc.Resolve<ObjectWithDependencies2>();
+        }
+
+        [TestMethod]
+        public void IfMockingUnregegisteredInterfacesIs_OFF_Work_If_Interfaces_Registered()
+        {
+            InitPrivateMembers(false);
+            _mocknity.RegisterStub<IFirstObject>();
+            _mocknity.RegisterStub<ISecondObject>();
+            var obj = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.IsNotNull(obj);
+        }
+
+        [TestMethod]
+        public void IfMockingUnregegisteredInterfacesIs_OFF_Work_If_Class_Registered()
+        {
+            InitPrivateMembers(false);
+            _mocknity.RegisterPartialMock<FirstObjectImpl>();
+            var obj = _ioc.Resolve<FirstObjectImpl>();
+            obj.Replay();
+            Assert.AreEqual("I'm the first of all", obj.IntroduceYourself());
+            obj.Stub(x => x.IntroduceYourself()).Return("t");
+            obj.Replay();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
+
+        [TestMethod]
+        public void IfMockingUnregegisteredInterfacesIs_OFF_Work_If_ClassWithArgument_Registered()
+        {
+            InitPrivateMembers(false);
+            _mocknity.RegisterPartialMock<FirstObjectImpl2>();
+            _mocknity.RegisterStrictMock<ISecondObject>();
+            var obj = _ioc.Resolve<FirstObjectImpl2>();
+            obj.Replay();
+            Assert.AreEqual("I'm the first of all", obj.IntroduceYourself());
+            obj.Stub(x => x.IntroduceYourself()).Return("t");
+            obj.Replay();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
+
+        [TestMethod]
+        public void AfterType_WasResolved_FROMUnity_MocksRegistration_MustWork()
+        {
+            InitPrivateMembers(false);
+            _ioc.RegisterType<EmptyType>();
+            var objImpl = _ioc.Resolve<EmptyType>();
+            _mocknity.RegisterPartialMock<FirstObjectImpl>();
+            var obj = _ioc.Resolve<FirstObjectImpl>();
+            obj.Stub(x => x.IntroduceYourself()).Return("t");
         }
 
         public void CheckPartialMock(IFirstObject obj)
