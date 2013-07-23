@@ -11,9 +11,8 @@ namespace Mocknity.Strategies.Rhino
         private readonly IUnityContainer unityContainer;
         protected MockRepository repository;
 
-        public AbstractRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType,
-                                                 bool isDefault = false)
-            : base(mocknity, baseType, implType, isDefault)
+        public AbstractRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType)
+            : base(mocknity, baseType, implType)
         {
             repository = mocknity.getRepository();
             unityContainer = mocknity.getContainer();

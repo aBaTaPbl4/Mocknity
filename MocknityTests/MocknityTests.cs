@@ -286,15 +286,14 @@ namespace MocknityTests
             Assert.AreEqual("t", obj.IntroduceYourself());
         }
 
-        [TestMethod]
-        public void AfterType_WasResolved_FROMUnity_MocksRegistration_MustWork()
+        [TestMethod, ExpectedException(typeof(InvalidOperationException))]
+        public void AfterType_WasResolved_FROMUnity_MocksRegistration_DoesNotWork()
         {
-            InitPrivateMembers(false);
             _ioc.RegisterType<EmptyType>();
             var objImpl = _ioc.Resolve<EmptyType>();
             _mocknity.RegisterPartialMock<FirstObjectImpl>();
-            var obj = _ioc.Resolve<FirstObjectImpl>();
-            obj.Stub(x => x.IntroduceYourself()).Return("t");
+            var obj = _ioc.Resolve<FirstObjectImpl>(); //ioc returns real type!!!
+            obj.Stub(x => x.IntroduceYourself()).Return("t");//exception occured
         }
 
         public void CheckPartialMock(IFirstObject obj)
@@ -489,6 +488,60 @@ namespace MocknityTests
         public void RegisterPartialMockType_ImplVSInterface__Test()
         {
             _mocknity.RegisterPartialMockType<IObjectWithDependencies, ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void RegisterStubType_ImplVSImpl__Test()
+        {
+            _mocknity.RegisterStubType<ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void RegisterStubType_ImplVSInterface__Test()
+        {
+            _mocknity.RegisterStubType<IObjectWithDependencies, ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void RegisterDynamicMockType_ImplVSImpl__Test()
+        {
+            _mocknity.RegisterDynamicMockType<ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void RegisterDynamicMockType_ImplVSInterface__Test()
+        {
+            _mocknity.RegisterDynamicMockType<IObjectWithDependencies, ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<IObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void RegisterStrictMockType_ImplVSImpl__Test()
+        {
+            _mocknity.RegisterStrictMockType<ObjectWithDependencies>();
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>();
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void RegisterStrictMockType_ImplVSInterface__Test()
+        {
+            _mocknity.RegisterStrictMockType<IObjectWithDependencies, ObjectWithDependencies>();
             var obj1 = _ioc.Resolve<IObjectWithDependencies>();
             var obj2 = _ioc.Resolve<ObjectWithDependencies>();
             Assert.AreNotEqual(obj1, obj2);

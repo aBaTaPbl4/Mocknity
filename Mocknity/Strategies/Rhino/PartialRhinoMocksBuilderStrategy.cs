@@ -5,8 +5,8 @@ namespace Mocknity.Strategies.Rhino
 {
     public class PartialRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy<DynamicRhinoMocksBuilderStrategy>
     {
-        public PartialRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType,
-                                                bool isDefault = false) : base(mocknity, baseType, implType, isDefault)
+        public PartialRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType) 
+            : base(mocknity, baseType, implType)
         {
         }
 

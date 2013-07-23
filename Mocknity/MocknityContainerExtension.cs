@@ -4,6 +4,7 @@ using Microsoft.Practices.ObjectBuilder2;
 using Microsoft.Practices.Unity;
 using Microsoft.Practices.Unity.ObjectBuilder;
 using Mocknity.Strategies.Rhino;
+using Mocknity.Strategies.Structure;
 using Rhino.Mocks;
 
 namespace Mocknity
@@ -13,7 +14,7 @@ namespace Mocknity
         private readonly bool _mockUnregisteredInterfaces;
         private readonly Dictionary<Type, object> mocks = new Dictionary<Type, object>();
         private readonly Dictionary<Type, Type> strategiesMapping = new Dictionary<Type, Type>();
-        private IBuilderStrategy _defaultStrategy;
+        private IAutoMockBuilderStrategy _defaultStrategy;
         protected MockRepository repository;
 
         public MocknityContainerExtension(MockRepository repository, bool mockUnregisteredInterfaces = false)
@@ -24,11 +25,6 @@ namespace Mocknity
         }
 
         #region IMocknityExtensionConfiguration Members
-
-        public void SetStrategy<T>(Type type)
-        {
-            SetStrategy<T>(type, type);
-        }
 
         public bool CheckStrategyMapping<T>(Type type)
         {
@@ -115,21 +111,22 @@ namespace Mocknity
             // register default builder strategy
             if (_mockUnregisteredInterfaces)
             {
-                _defaultStrategy = new DynamicRhinoMocksBuilderStrategy(this, null, null, true);
+                _defaultStrategy = new DynamicRhinoMocksBuilderStrategy(this, null, null);
+                _defaultStrategy.IsDefault = true;
                 Context.Strategies.Add(_defaultStrategy, UnityBuildStage.PreCreation);
             }
         }
 
-        private IBuilderStrategy CreateBuilderStrategy<T>(Type baseType, Type implType, bool isDefault)
+        private IAutoMockBuilderStrategy CreateBuilderStrategy<T>(Type baseType, Type implType)
         {
             Type builderImpl = typeof (T).GetInterface(typeof (IBuilderStrategy).Name);
             if (builderImpl != null)
             {
                 return
-                    (IBuilderStrategy)
-                    Activator.CreateInstance(typeof (T), new object[] {this, baseType, implType, isDefault});
+                    (IAutoMockBuilderStrategy)
+                    Activator.CreateInstance(typeof (T), new object[] {this, baseType, implType});
             }
-            throw new ArgumentException("Type must implement IBuilderStrategy interface", "typeBase");
+            throw new ArgumentException("Type must implement IAutoMockBuilderStrategy interface", "typeBase");
         }
 
         /// <summary>
@@ -138,7 +135,8 @@ namespace Mocknity
         /// <typeparam name="T"></typeparam>
         public void SetDefaultStrategy<T>()
         {
-            IBuilderStrategy strategy = CreateBuilderStrategy<T>(null, null, true);
+            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<T>(null, null);
+            strategy.IsDefault = true;
             _defaultStrategy = strategy;
             mocks.Clear();
             strategiesMapping.Clear();
@@ -146,9 +144,16 @@ namespace Mocknity
             Context.Strategies.Add(_defaultStrategy, UnityBuildStage.PreCreation);
         }
 
-        private void SetStrategy<T>(Type typeBase, Type typeImpl)
+        public void SetStrategy<T>(Type type, bool onlyOneMockCreate = true)
         {
-            IBuilderStrategy strategy = CreateBuilderStrategy<T>(typeBase, typeImpl, false);
+            SetStrategy<T>(type, type, onlyOneMockCreate);
+        }
+
+        private void SetStrategy<T>(Type typeBase, Type typeImpl, bool onlyOneMockCreate = true)
+        {
+            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<T>(typeBase, typeImpl);
+            strategy.OnlyOneMockCreation = onlyOneMockCreate;
+
             if (strategiesMapping.ContainsKey(typeBase))
             {
                 strategiesMapping.Remove(typeBase);
@@ -165,6 +170,16 @@ namespace Mocknity
             Context.Strategies.Add(strategy, UnityBuildStage.PreCreation);
         }
 
+        public void RegisterStrictMockType<TBaseType, TType>()
+        {
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false);
+        }
+
+        public void RegisterStrictMockType<TType>()
+        {
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TType), false);
+        }
+
         public void RegisterStrictMock<TBaseType, TType>()
         {
             SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof (TBaseType), typeof (TType));
@@ -173,6 +188,16 @@ namespace Mocknity
         public void RegisterStrictMock<TType>()
         {
             SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof (TType));
+        }
+
+        public void RegisterDynamicMockType<TBaseType, TType>()
+        {
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false);
+        }
+
+        public void RegisterDynamicMockType<TType>()
+        {
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TType), false);
         }
 
         public void RegisterDynamicMock<TBaseType, TType>()
@@ -197,12 +222,12 @@ namespace Mocknity
 
         public void RegisterPartialMockType<TBaseType, TType>()
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof (TBaseType), typeof(TType));
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof (TBaseType), typeof(TType), false);
         }
 
         public void RegisterPartialMockType<TType>()
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType));
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false);
         }
 
         public void RegisterStub<TType>()
@@ -213,6 +238,16 @@ namespace Mocknity
         public void RegisterStub<TBaseType, TType>()
         {
             SetStrategy<StubRhinoMocksBuilderStrategy>(typeof (TBaseType), typeof (TType));
+        }
+
+        public void RegisterStubType<TType>()
+        {
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TType), false);
+        }
+
+        public void RegisterStubType<TBaseType, TType>()
+        {
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false);
         }
     }
 }

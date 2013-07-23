@@ -4,8 +4,8 @@ namespace Mocknity.Strategies.Rhino
 {
     public class StubRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy<StubRhinoMocksBuilderStrategy>
     {
-        public StubRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType,
-                                             bool isDefault = false) : base(mocknity, baseType, implType, isDefault)
+        public StubRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType) 
+            : base(mocknity, baseType, implType)
         {
         }
 

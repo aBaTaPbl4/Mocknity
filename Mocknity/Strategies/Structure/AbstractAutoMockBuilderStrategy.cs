@@ -8,19 +8,19 @@ namespace Mocknity.Strategies.Structure
     {
         private readonly Type _baseType;
         private readonly Type _implType;
-        private readonly bool _isDefault;
-        private readonly bool _onlyOneMockCreation;
         protected IMocknityExtensionConfiguration mocknity;
 
-        public AbstractAutoMockBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType,
-                                               bool isDefault = false, bool onlyOneMockCreation = true)
+        public AbstractAutoMockBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType)
         {
             this.mocknity = mocknity;
             _baseType = baseType;
             _implType = implType ?? baseType;
-            _isDefault = isDefault;
-            _onlyOneMockCreation = onlyOneMockCreation;
+            IsDefault = false;
+            OnlyOneMockCreation = true;
         }
+
+        public bool IsDefault { get; set; }
+        public bool OnlyOneMockCreation { get; set; }
 
         #region IAutoMockBuilderStrategy Members
 
@@ -38,19 +38,19 @@ namespace Mocknity.Strategies.Structure
                 return;
             }
 
-            if (buildKey.Type != _baseType && buildKey.Type != _implType && !_isDefault)
+            if (buildKey.Type != _baseType && buildKey.Type != _implType && !IsDefault)
             {
                 //this strategy is not owner for received type
                 return;
             }
 
-            if (_isDefault && !buildKey.Type.IsInterface)
+            if (IsDefault && !buildKey.Type.IsInterface)
             {
                 //default build strategy using only for mocking interfaces
                 return;
             }
 
-            if (_isDefault && mocknity.ContainsMapping(buildKey.Type))
+            if (IsDefault && mocknity.ContainsMapping(buildKey.Type))
             {
                 //if mapping of the type received is registered, - dont use default build strategy
                 return;
@@ -64,47 +64,58 @@ namespace Mocknity.Strategies.Structure
             if (!mocknity.getContainer().IsRegistered(buildKey.Type))
             {
                 Type typeToSearch = buildKey.Type.IsInterface ? buildKey.Type : _implType;
-                if (_onlyOneMockCreation && mocknity.ContainsMock(typeToSearch))
+                if (OnlyOneMockCreation)
                 {
-                    context.Existing = mocknity.Get(typeToSearch);
+                    if (mocknity.ContainsMock(typeToSearch))
+                    {
+                        context.Existing = mocknity.Get(typeToSearch);    
+                    }
+                    else
+                    {
+                        context.Existing = RegisterMock(buildKey);
+                    }
                 }
-                else
+                else //registration is not required
                 {
-                    RegisterMock(context, buildKey);
+                    context.Existing = CreateMock(buildKey);
                 }
                 context.BuildComplete = true;
             }
         }
 
-
-        private void RegisterMock(IBuilderContext context, NamedTypeBuildKey buildKey)
+        private object RegisterMock(NamedTypeBuildKey buildKey)
         {
+            var mock = CreateMock(buildKey);
+            var baseType = _baseType ?? buildKey.Type;
+            mocknity.AddMock(baseType , mock);
+            if (_implType != null && _implType != baseType)
+            {
+                mocknity.AddMock(_implType, mock);    
+            }
+            return mock;
+        }
+
+        private object CreateMock(NamedTypeBuildKey buildKey)
+        {
+            object mock = null;
             if (buildKey.Type.IsInterface)
             {
-                object mock = null;
                 bool arrivedInterfaceButWeHaveImplType = _implType != null && _implType != buildKey.Type;
-                if (arrivedInterfaceButWeHaveImplType && !mocknity.ContainsMock(_implType))
+                if (arrivedInterfaceButWeHaveImplType)
                 {
                     mock = CreateMockByType(_implType);
-                    mocknity.AddMock(_implType, mock);
                 }
                 if (mock == null)
                 {
                     mock = CreateMockByInterface(buildKey.Type);
                 }
-                context.Existing = mock;
             }
             else
             {
-                object mock = null;
                 mock = CreateMockByType(_implType);
-                if (_implType != _baseType && !mocknity.ContainsMock(_baseType))
-                {
-                    mocknity.AddMock(_baseType, mock);
-                }
-                context.Existing = mock;
+
             }
-            mocknity.AddMock(buildKey.Type, context.Existing);
+            return mock;
         }
 
         public abstract object CreateMockByType(Type type);
