@@ -9,6 +9,6 @@ namespace Mocknity.Strategies.Structure
         object CreateMockByType(Type type);
         bool IsDefault { get; set; }
         bool OnlyOneMockCreation { get; set; }
-
+        string Name { get; set; }
     }
 }

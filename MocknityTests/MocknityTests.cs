@@ -547,21 +547,28 @@ namespace MocknityTests
             Assert.AreNotEqual(obj1, obj2);
         }
 
-        //[TestMethod]
-        //public void RegisterPartialNamedMock_NamedAndDefaultInstances__AreDifferent()
-        //{
-        //    _mocknity.RegisterPartialMock<ObjectWithDependencies>();
-        //    _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
-        //    var obj1 = _ioc.Resolve<ObjectWithDependencies>("test");
-        //    var obj2 = _ioc.Resolve<ObjectWithDependencies>();
-        //    Assert.AreNotEqual(obj1, obj2);
-        //}
+        [TestMethod]
+        public void RegisterPartialNamedMock_NamedAndDefaultInstances__AreDifferent()
+        {
+            _mocknity.RegisterPartialMock<ObjectWithDependencies>();
+            _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>("test");
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
 
-        //[TestMethod, ExpectedException(typeof (ResolutionFailedException))]
-        //public void RegisterPartialNamedMock_DefaultResolveShouldFailed__Test()
+        [TestMethod, ExpectedException(typeof(ResolutionFailedException))]
+        public void RegisterPartialNamedMock_DefaultResolveShouldFailed__Test()
+        {
+            _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
+            _ioc.Resolve<ObjectWithDependencies>();
+        }
+
+        //[TestMethod, ExpectedException(typeof(ResolutionFailedException))]
+        //public void RegisterPartialNamedMock_UnknownResolveShouldFailed__Test()
         //{
         //    _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
-        //    _ioc.Resolve<ObjectWithDependencies>();
+        //    _ioc.Resolve<ObjectWithDependencies>("test1");
         //}
 
     }
