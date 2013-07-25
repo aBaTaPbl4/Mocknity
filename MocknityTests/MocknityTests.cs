@@ -111,7 +111,7 @@ namespace MocknityTests
 
         public virtual string IntroduceYourself()
         {
-            return "I'm the first of all";
+            return "second impl";
         }
 
     }
@@ -280,7 +280,7 @@ namespace MocknityTests
             _mocknity.RegisterStrictMock<ISecondObject>();
             var obj = _ioc.Resolve<FirstObjectImpl2>();
             obj.Replay();
-            Assert.AreEqual("I'm the first of all", obj.IntroduceYourself());
+            Assert.AreEqual("second impl", obj.IntroduceYourself());
             obj.Stub(x => x.IntroduceYourself()).Return("t");
             obj.Replay();
             Assert.AreEqual("t", obj.IntroduceYourself());
@@ -593,6 +593,18 @@ namespace MocknityTests
             var obj1 = _ioc.Resolve<ObjectWithDependencies>("test");
             var obj2 = _ioc.Resolve<ObjectWithDependencies>();
             Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void RegisterPartial_NamedTypes__InstancesAreDifferent()
+        {
+            _mocknity.RegisterPartialMockType<IFirstObject, FirstObjectImpl>("Impl1");
+            _mocknity.RegisterPartialMockType<IFirstObject, FirstObjectImpl2>("Impl2");
+            var obj1 = _ioc.Resolve<IFirstObject>("Impl1");
+            var obj2 = _ioc.Resolve<IFirstObject>("Impl2");
+            Assert.AreNotEqual(obj1, obj2);
+            Assert.AreEqual("I'm the first of all",obj1.IntroduceYourself());
+            Assert.AreEqual("second impl", obj2.IntroduceYourself());
         }
 
         [TestMethod, ExpectedException(typeof(ResolutionFailedException))]
