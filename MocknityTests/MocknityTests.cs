@@ -560,16 +560,69 @@ namespace MocknityTests
         [TestMethod, ExpectedException(typeof(ResolutionFailedException))]
         public void RegisterPartialNamedMock_DefaultResolveShouldFailed__Test()
         {
+            _mocknity.MockUnregisteredInterfaces = false;
+            //object will be created by unity, but fail will occured on dependency resolve;
             _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
             _ioc.Resolve<ObjectWithDependencies>();
         }
 
-        //[TestMethod, ExpectedException(typeof(ResolutionFailedException))]
-        //public void RegisterPartialNamedMock_UnknownResolveShouldFailed__Test()
-        //{
-        //    _mocknity.RegisterPartialMock<ObjectWithDependencies>("test");
-        //    _ioc.Resolve<ObjectWithDependencies>("test1");
-        //}
+        [TestMethod]
+        public void RegisterDynamicNamedMock_NamedAndDefaultInstances__AreDifferent()
+        {
+            _mocknity.RegisterDynamicMock<ObjectWithDependencies>();
+            _mocknity.RegisterDynamicMock<ObjectWithDependencies>("test");
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>("test");
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod, ExpectedException(typeof(ResolutionFailedException))]
+        public void RegisterDynamicNamedMock_DefaultResolveShouldFailed__Test()
+        {
+            _mocknity.MockUnregisteredInterfaces = false;
+            //object will be created by unity, but fail will occured on dependency resolve;
+            _mocknity.RegisterDynamicMock<ObjectWithDependencies>("test");
+            _ioc.Resolve<ObjectWithDependencies>();
+        }
+
+        [TestMethod]
+        public void RegisterStrictNamedMock_NamedAndDefaultInstances__AreDifferent()
+        {
+            _mocknity.RegisterStrictMock<ObjectWithDependencies>();
+            _mocknity.RegisterStrictMock<ObjectWithDependencies>("test");
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>("test");
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod, ExpectedException(typeof(ResolutionFailedException))]
+        public void RegisterStrictNamedMock_DefaultResolveShouldFailed__Test()
+        {
+            _mocknity.MockUnregisteredInterfaces = false;
+            //object will be created by unity, but fail will occured on dependency resolve;
+            _mocknity.RegisterStrictMock<ObjectWithDependencies>("test");
+            _ioc.Resolve<ObjectWithDependencies>();
+        }
+
+        [TestMethod]
+        public void RegisterNamedStub_NamedAndDefaultInstances__AreDifferent()
+        {
+            _mocknity.RegisterStub<ObjectWithDependencies>();
+            _mocknity.RegisterStub<ObjectWithDependencies>("test");
+            var obj1 = _ioc.Resolve<ObjectWithDependencies>("test");
+            var obj2 = _ioc.Resolve<ObjectWithDependencies>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod, ExpectedException(typeof(ResolutionFailedException))]
+        public void RegisterNamedStub_DefaultResolveShouldFailed__Test()
+        {
+            _mocknity.MockUnregisteredInterfaces = false;
+            //object will be created by unity, but fail will occured on dependency resolve;
+            _mocknity.RegisterStub<ObjectWithDependencies>("test");
+            _ioc.Resolve<ObjectWithDependencies>();
+        }
+
 
     }
 }

@@ -12,7 +12,6 @@ namespace Mocknity
 {
     public class MocknityContainerExtension : UnityContainerExtension, IMocknityExtensionConfiguration
     {
-        private readonly bool _mockUnregisteredInterfaces;
         //name, mappings coolection
         private readonly Dictionary<string, Dictionary<Type, object>> mocks;
         private readonly Dictionary<string, Dictionary<Type, Type>> strategiesMapping;
@@ -24,7 +23,7 @@ namespace Mocknity
             mocks = new Dictionary<string, Dictionary<Type, object>>();
             strategiesMapping = new Dictionary<string, Dictionary<Type, Type>>();
             this.repository = repository;
-            _mockUnregisteredInterfaces = mockUnregisteredInterfaces;
+            MockUnregisteredInterfaces = mockUnregisteredInterfaces;
             AutoReplayPartialMocks = true;
         }
 
@@ -135,10 +134,7 @@ namespace Mocknity
             return Container;
         }
 
-        public bool MockUnregisteredInterfaces
-        {
-            get { return _mockUnregisteredInterfaces; }
-        }
+        public bool MockUnregisteredInterfaces { get; set; }
 
         public bool AutoReplayPartialMocks { get; set; }
 
@@ -152,7 +148,7 @@ namespace Mocknity
                 throw new NullReferenceException("Mocknity needs to have a mock repository");
             }
             // register default builder strategy
-            if (_mockUnregisteredInterfaces)
+            if (MockUnregisteredInterfaces)
             {
                 _defaultStrategy = new DynamicRhinoMocksBuilderStrategy(this, null, null);
                 _defaultStrategy.IsDefault = true;
