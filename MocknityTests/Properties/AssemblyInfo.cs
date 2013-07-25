@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 
 [assembly: AssemblyTitle("MocknityTests")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("skype:mAcTeP.aBaTaPbl4")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Microsoft")]
 [assembly: AssemblyProduct("MocknityTests")]
