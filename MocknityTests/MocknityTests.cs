@@ -29,7 +29,7 @@ namespace MocknityTests
 
         public virtual string IntroduceYourself()
         {
-            return "I'm the first of all";
+            return GetType().Name;
         }
 
         #endregion
@@ -111,7 +111,7 @@ namespace MocknityTests
 
         public virtual string IntroduceYourself()
         {
-            return "second impl";
+            return GetType().Name;
         }
 
     }
@@ -265,11 +265,7 @@ namespace MocknityTests
             InitPrivateMembers(false);
             _mocknity.RegisterPartialMock<FirstObjectImpl>();
             var obj = _ioc.Resolve<FirstObjectImpl>();
-            obj.Replay();
-            Assert.AreEqual("I'm the first of all", obj.IntroduceYourself());
-            obj.Stub(x => x.IntroduceYourself()).Return("t");
-            obj.Replay();
-            Assert.AreEqual("t", obj.IntroduceYourself());
+            CheckObjectIsPartialMock(obj);
         }
 
         [TestMethod]
@@ -279,11 +275,7 @@ namespace MocknityTests
             _mocknity.RegisterPartialMock<FirstObjectImpl2>();
             _mocknity.RegisterStrictMock<ISecondObject>();
             var obj = _ioc.Resolve<FirstObjectImpl2>();
-            obj.Replay();
-            Assert.AreEqual("second impl", obj.IntroduceYourself());
-            obj.Stub(x => x.IntroduceYourself()).Return("t");
-            obj.Replay();
-            Assert.AreEqual("t", obj.IntroduceYourself());
+            CheckObjectIsPartialMock(obj);
         }
 
         [TestMethod, ExpectedException(typeof(InvalidOperationException))]
@@ -425,7 +417,7 @@ namespace MocknityTests
         }
 
         //STRICT
-        [TestMethod, ExpectedException(typeof (ExpectationViolationException))]
+        [TestMethod, ExpectedException(typeof(ExpectationViolationException))]
         public void ResolveStrictMock_Works_WhenHaveDependcies()
         {
             _mocknity.RegisterStrictMock<IFirstObject>();
@@ -603,8 +595,8 @@ namespace MocknityTests
             var obj1 = _ioc.Resolve<IFirstObject>("Impl1");
             var obj2 = _ioc.Resolve<IFirstObject>("Impl2");
             Assert.AreNotEqual(obj1, obj2);
-            Assert.AreEqual("I'm the first of all",obj1.IntroduceYourself());
-            Assert.AreEqual("second impl", obj2.IntroduceYourself());
+            Assert.AreEqual(obj1.GetType().Name, obj1.IntroduceYourself());
+            Assert.AreEqual(obj2.GetType().Name, obj2.IntroduceYourself());
         }
 
         [TestMethod, ExpectedException(typeof(ResolutionFailedException))]
@@ -635,6 +627,32 @@ namespace MocknityTests
             _ioc.Resolve<ObjectWithDependencies>();
         }
 
+        [TestMethod]
+        public void RegisterMockTypeWithName_ShouldWork()
+        {
+            var name = "nm";
+            _mocknity.RegisterPartialMockType<FirstObjectImpl>(name);
+            var obj1 = _ioc.Resolve<FirstObjectImpl>(name);
+            CheckObjectIsPartialMock(obj1);
+            var obj2 = _ioc.Resolve<FirstObjectImpl>(name);
+            CheckObjectIsPartialMock(obj2);
+            Assert.AreNotEqual(obj1,obj2);
+        }
 
+        [TestMethod, ExpectedException(typeof(System.InvalidOperationException), "The object 'MocknityTests.FirstObjectImpl' is not a mocked object.")]
+        public void RegisterMockTypeWithName_WhenDefaultInstnceIsDefined_ShouldFail()
+        {
+            _ioc.RegisterType<FirstObjectImpl>();
+            RegisterMockTypeWithName_ShouldWork();
+        }
+
+        private void CheckObjectIsPartialMock(IFirstObject obj)
+        {
+            obj.Replay();
+            Assert.AreEqual(obj.GetType().Name, obj.IntroduceYourself());
+            obj.Stub(x => x.IntroduceYourself()).Return("t");
+            obj.Replay();
+            Assert.AreEqual("t",obj.IntroduceYourself());
+        }
     }
 }
