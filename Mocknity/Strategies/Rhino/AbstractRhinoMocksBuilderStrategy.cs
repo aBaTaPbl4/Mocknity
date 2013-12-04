@@ -8,7 +8,7 @@ namespace Mocknity.Strategies.Rhino
 {
     public abstract class AbstractRhinoMocksBuilderStrategy<T> : AbstractAutoMockBuilderStrategy
     {
-        private readonly IUnityContainer unityContainer;
+        protected readonly IUnityContainer unityContainer;
         protected MockRepository repository;
 
         public AbstractRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType)

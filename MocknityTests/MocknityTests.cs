@@ -116,6 +116,12 @@ namespace MocknityTests
 
     }
 
+    public class ObjectWithPropDependency
+    {
+        [Dependency]
+        public IFirstObject Obj { get; set; }
+    }
+
     public class EmptyType
     {
         
@@ -635,6 +641,15 @@ namespace MocknityTests
             _ioc.Resolve<ObjectWithDependencies>();
         }
 
+        [TestMethod]
+        public void DependencyProperties_ShouldBeInitialized_ByMockResolve()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _mocknity.RegisterPartialMock<ObjectWithPropDependency>();
+            var mock = _ioc.Resolve<ObjectWithPropDependency>();
+            Assert.IsNotNull(mock.Obj);
+
+        }
 
     }
 }
