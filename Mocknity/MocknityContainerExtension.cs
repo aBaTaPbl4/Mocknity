@@ -156,7 +156,7 @@ namespace Mocknity
             }
         }
 
-        private IAutoMockBuilderStrategy CreateBuilderStrategy<T>(Type baseType, Type implType, string name)
+        private IAutoMockBuilderStrategy CreateBuilderStrategy<T>(Type baseType, Type implType, string name, params TypedInjectionValue[] resolveParams)
         {
             Type builderImpl = typeof (T).GetInterface(typeof (IBuilderStrategy).Name);
             if (builderImpl != null)
@@ -165,6 +165,7 @@ namespace Mocknity
                     (IAutoMockBuilderStrategy)
                     Activator.CreateInstance(typeof (T), new object[] {this, baseType, implType});
                 strategy.Name = name;
+                strategy.ConstructorParameters = resolveParams;
                 return strategy;
             }
             throw new ArgumentException("Type must implement IAutoMockBuilderStrategy interface", "typeBase");
@@ -185,14 +186,14 @@ namespace Mocknity
             Context.Strategies.Add(_defaultStrategy, UnityBuildStage.PreCreation);
         }
 
-        public void SetStrategy<T>(Type type, bool onlyOneMockCreate = true, string name = "")
+        public void SetStrategy<T>(Type type, bool onlyOneMockCreate = true, string name = "", params TypedInjectionValue[] resolveParams)
         {
-            SetStrategy<T>(type, type, onlyOneMockCreate, name);
+            SetStrategy<T>(type, type, onlyOneMockCreate, name, resolveParams);
         }
 
-        private void SetStrategy<T>(Type typeBase, Type typeImpl, bool onlyOneMockCreate,  string name)
+        private void SetStrategy<T>(Type typeBase, Type typeImpl, bool onlyOneMockCreate, string name, params TypedInjectionValue[] resolveParams)
         {
-            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<T>(typeBase, typeImpl, name);
+            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<T>(typeBase, typeImpl, name, resolveParams);
             strategy.OnlyOneMockCreation = onlyOneMockCreate;
 
             if (ContainsMapping(typeBase, name))
@@ -251,6 +252,8 @@ namespace Mocknity
             SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TType), true, name);
         }
 
+
+
         public void RegisterPartialMock<TBaseType, TType>(string name = "")
         {
             SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, name);
@@ -261,6 +264,27 @@ namespace Mocknity
             SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof (TType), true, name);
         }
 
+        public void RegisterPartialMock<TType>(params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), true, "", resolveParamOverrides);
+        }
+
+        public void RegisterPartialMock<TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), true, name, resolveParamOverrides);
+        }
+
+
+        public void RegisterPartialMock<TBaseType, TType>(params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, "", resolveParamOverrides);
+        }
+
+        public void RegisterPartialMock<TBaseType, TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, name, resolveParamOverrides);
+        }
+
         public void RegisterPartialMockType<TBaseType, TType>(string name = "")
         {
             SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name);
@@ -269,6 +293,26 @@ namespace Mocknity
         public void RegisterPartialMockType<TType>(string name = "")
         {
             SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, name);
+        }
+
+        public void RegisterPartialMockType<TBaseType, TType>(params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, "", resolveParamOverrides);
+        }
+
+        public void RegisterPartialMockType<TType>(params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, "", resolveParamOverrides);
+        }
+
+        public void RegisterPartialMockType<TBaseType, TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name, resolveParamOverrides);
+        }
+
+        public void RegisterPartialMockType<TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, name, resolveParamOverrides);
         }
 
         public void RegisterStub<TType>(string name = "")

@@ -8,7 +8,7 @@ namespace Mocknity
     {
         bool MockUnregisteredInterfaces { get; }
         bool AutoReplayPartialMocks { get; set; }
-        void SetStrategy<T>(Type type, bool oneMockCreate = true, string name = "");
+        void SetStrategy<T>(Type type, bool oneMockCreate = true, string name = "", params TypedInjectionValue[] resolveParams);
 
         bool CheckStrategyMapping<T>(Type type, string name);
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Practices.ObjectBuilder2;
 using Microsoft.Practices.Unity;
 
@@ -8,6 +10,8 @@ namespace Mocknity.Strategies.Structure
     {
         private readonly Type _baseType;
         private readonly Type _implType;
+
+        private Dictionary<Type, int> _typeIndexMap; 
         protected IMocknityExtensionConfiguration mocknity;
 
         public AbstractAutoMockBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType)
@@ -17,12 +21,39 @@ namespace Mocknity.Strategies.Structure
             _implType = implType ?? baseType;
             IsDefault = false;
             OnlyOneMockCreation = true;
-            Name = "";
+            Name = "";            
+            _typeIndexMap = new Dictionary<Type, int>();
         }
-
+        
+        
         public bool IsDefault { get; set; }
         public bool OnlyOneMockCreation { get; set; }
         public string Name { get; set; }
+        public TypedInjectionValue[] ConstructorParameters { get; set; }
+        protected IBuilderContext BuilderContext { get; private set; }
+
+        protected TypedInjectionValue GetOverridenParameter(Type paramType)
+        {
+            if (ConstructorParameters == null || 
+                ConstructorParameters.Length == 0 ||
+                !ConstructorParameters.Any(x => x.ParameterType == paramType))
+            {
+                return null;
+            }
+            if (!_typeIndexMap.ContainsKey(paramType))
+            {
+                _typeIndexMap.Add(paramType, -1);
+            }
+            int previousIndex = _typeIndexMap[paramType];
+            int currentIndex = previousIndex + 1;
+            var overridenParams = ConstructorParameters.Where(x => x.ParameterType == paramType).ToList();
+            if (overridenParams.Count < currentIndex + 1)
+            {
+                return overridenParams[previousIndex];
+            }
+            _typeIndexMap[paramType]++;
+            return overridenParams[currentIndex];
+        }
 
         #region IAutoMockBuilderStrategy Members
 
@@ -32,6 +63,7 @@ namespace Mocknity.Strategies.Structure
 
         public override void PreBuildUp(IBuilderContext context)
         {
+            BuilderContext = context;
             NamedTypeBuildKey buildKey = context.OriginalBuildKey;
             bool needToRegisterIfUnknown = mocknity.MockUnregisteredInterfaces && buildKey.Type.IsInterface;
             if (!mocknity.IsTypeMapped(buildKey.Type, Name) && !needToRegisterIfUnknown)

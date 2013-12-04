@@ -99,6 +99,13 @@ namespace MocknityTests
         }
     }
 
+    public class FirstObjectImpl3 : IFirstObject
+    {
+        public string IntroduceYourself()
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     public class FirstObjectImpl2 : IFirstObject
     {
@@ -120,12 +127,33 @@ namespace MocknityTests
     {
         [Dependency]
         public IFirstObject Obj { get; set; }
+
+        [Dependency("FirstObjectImpl3")]
+        public IFirstObject ObjNamed { get; set; }
     }
 
     public class EmptyType
     {
         
     }
+
+
+    public class  MyClass 
+    {
+        public IFirstObject FirstObj;
+        public Guid Id1;
+        public Guid Id2;
+        public ISecondObject SecondObj;
+
+        public MyClass(IFirstObject firstObj, Guid id1, ISecondObject secondObj, Guid id2)
+        {
+            FirstObj = firstObj;
+            Id1 = id1;
+            SecondObj = secondObj;
+            Id2 = id2;
+        }
+    }
+
     #endregion
 
     [TestClass]
@@ -637,9 +665,21 @@ namespace MocknityTests
         public void DependencyProperties_ShouldBeInitialized_ByMockResolve()
         {
             _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl3>("FirstObjectImpl3");
             _mocknity.RegisterPartialMock<ObjectWithPropDependency>();
             var mock = _ioc.Resolve<ObjectWithPropDependency>();
             Assert.IsNotNull(mock.Obj);
+        }
+
+        [TestMethod]
+        public void NamedDependencyProperties_ShouldBeInitialized_ByMockResolve()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl3>("FirstObjectImpl3");         
+            _mocknity.RegisterPartialMock<ObjectWithPropDependency>();
+
+            var mock = _ioc.Resolve<ObjectWithPropDependency>();
+            Assert.IsInstanceOfType(mock.ObjNamed, typeof(FirstObjectImpl3));
         }
 
         [TestMethod]
@@ -660,6 +700,54 @@ namespace MocknityTests
             _ioc.RegisterType<FirstObjectImpl>();
             RegisterMockTypeWithName_ShouldWork();
         }
+
+        [TestMethod]
+        public void Constructor_Parameters_OverridingTest()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _mocknity.RegisterDynamicMock<ISecondObject>();
+            var id = Guid.NewGuid();
+            _mocknity.RegisterPartialMock<MyClass>(new InjectionParameter<Guid>(id));
+
+            var mock = _ioc.Resolve<MyClass>();
+            Assert.AreEqual(id, mock.Id1);
+            Assert.AreEqual(id, mock.Id2);
+            Assert.IsNotNull(mock.FirstObj);
+            Assert.IsNotNull(mock.SecondObj);
+        }
+
+        [TestMethod]
+        public void Constructor_Overriding_SimilarType_Params_Test()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _mocknity.RegisterDynamicMock<ISecondObject>();
+            var id1 = Guid.NewGuid();
+            var id2 = Guid.NewGuid();
+            _mocknity.RegisterPartialMock<MyClass>(new InjectionParameter<Guid>(id1), new InjectionParameter<Guid>(id2));
+
+            var mock = _ioc.Resolve<MyClass>();
+            Assert.AreEqual(id1, mock.Id1);
+            Assert.AreEqual(id2, mock.Id2);
+            Assert.IsNotNull(mock.FirstObj);
+            Assert.IsNotNull(mock.SecondObj);
+        }
+
+        [TestMethod]
+        public void Constructor_Named_Parameters_OverridingTest()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl3>("FirstObjectImpl3");
+            _mocknity.RegisterDynamicMock<ISecondObject>();
+            var id = Guid.NewGuid();
+            _mocknity.RegisterPartialMock<MyClass>(
+                new ResolvedParameter<IFirstObject>("FirstObjectImpl3"), new InjectionParameter<Guid>(id));
+
+            var mock = _ioc.Resolve<MyClass>();
+            Assert.AreEqual(id, mock.Id1);
+            Assert.IsInstanceOfType(mock.FirstObj, typeof(FirstObjectImpl3));
+            Assert.IsNotNull(mock.SecondObj);
+        }
+
 
         private void CheckObjectIsPartialMock(IFirstObject obj)
         {

@@ -30,16 +30,6 @@ namespace Mocknity.Strategies.Rhino
                 mock.Replay();    
             }            
             return mock;
-        }
-
-        private void InitDependencyProperties(object mock, Type type)
-        {
-            List<PropertyInfo> props = type.GetProperties().Where(
-                prop => Attribute.IsDefined(prop, typeof(DependencyAttribute))).ToList();
-            foreach (var propertyInfo in props)
-            {
-                 propertyInfo.SetValue(mock, unityContainer.Resolve(propertyInfo.PropertyType, String.Empty), null);       
-            }
             
         }
     }

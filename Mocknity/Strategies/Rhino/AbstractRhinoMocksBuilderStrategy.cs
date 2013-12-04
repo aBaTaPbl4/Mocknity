@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Microsoft.Practices.Unity;
 using Mocknity.Strategies.Structure;
@@ -8,7 +10,7 @@ namespace Mocknity.Strategies.Rhino
 {
     public abstract class AbstractRhinoMocksBuilderStrategy<T> : AbstractAutoMockBuilderStrategy
     {
-        protected readonly IUnityContainer unityContainer;
+        private readonly IUnityContainer unityContainer;
         protected MockRepository repository;
 
         public AbstractRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType)
@@ -17,7 +19,6 @@ namespace Mocknity.Strategies.Rhino
             repository = mocknity.getRepository();
             unityContainer = mocknity.getContainer();
         }
-
 
         protected object[] GetConstructorArguments(Type serviceType)
         {
@@ -35,11 +36,35 @@ namespace Mocknity.Strategies.Rhino
             int counter = 0;
             foreach (ParameterInfo parameterInfo in constructorParameters)
             {
-                arguments[counter++] = unityContainer.Resolve(parameterInfo.ParameterType, string.Empty);
+                TypedInjectionValue overridenParam = base.GetOverridenParameter(parameterInfo.ParameterType);
+                if (overridenParam == null)
+                {
+                    arguments[counter++] = unityContainer.Resolve(parameterInfo.ParameterType, string.Empty);    
+                }
+                else
+                {
+                    var resolvePolicy = overridenParam.GetResolverPolicy(parameterInfo.ParameterType);
+                    arguments[counter++] = resolvePolicy.Resolve(BuilderContext);
+                }
+                
             }
             return arguments;
         }
 
+        protected void InitDependencyProperties(object mock, Type type)
+        {
+            List<PropertyInfo> props = type.GetProperties().Where(
+                prop => Attribute.IsDefined(prop, typeof(DependencyAttribute))).ToList();
+            foreach (var propertyInfo in props)
+            {
+                DependencyAttribute attrib = Attribute.GetCustomAttribute(
+                                                            propertyInfo, 
+                                                            typeof(DependencyAttribute)) as DependencyAttribute;
+                string typeRegistrationName = attrib == null ? string.Empty : attrib.Name ?? string.Empty;
+                propertyInfo.SetValue(mock, unityContainer.Resolve(propertyInfo.PropertyType, typeRegistrationName), null);
+            }
+        }
+        
         /// Gets the greediest constructor.
         /// The constructor infos.
         /// Greediest constructor.

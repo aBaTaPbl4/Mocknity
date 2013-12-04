@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Practices.ObjectBuilder2;
+using Microsoft.Practices.Unity;
 
 namespace Mocknity.Strategies.Structure
 {
@@ -10,5 +11,6 @@ namespace Mocknity.Strategies.Structure
         bool IsDefault { get; set; }
         bool OnlyOneMockCreation { get; set; }
         string Name { get; set; }
+        TypedInjectionValue[] ConstructorParameters { get; set; }
     }
 }
