@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Practices.Unity;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mocknity;
@@ -746,6 +748,18 @@ namespace MocknityTests
             Assert.AreEqual(id, mock.Id1);
             Assert.IsInstanceOfType(mock.FirstObj, typeof(FirstObjectImpl3));
             Assert.IsNotNull(mock.SecondObj);
+        }
+
+        [TestMethod]
+        public void Resolve_Mock_Array_Test()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl3>("FirstObjectImpl3");
+            _mocknity.RegisterPartialMockType<ObjectWithPropDependency>("one");
+            _mocknity.RegisterPartialMock<ObjectWithPropDependency>("two");
+            _mocknity.RegisterPartialMockType<ObjectWithPropDependency>("free");
+            IEnumerable<ObjectWithPropDependency> mocks = _ioc.ResolveAll<ObjectWithPropDependency>();
+            Assert.AreEqual(3, mocks.Count());
         }
 
 

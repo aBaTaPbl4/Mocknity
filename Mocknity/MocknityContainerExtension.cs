@@ -210,6 +210,7 @@ namespace Mocknity
                 AddMapping<T>(typeImpl, name);
             }
             Context.Strategies.Add(strategy, UnityBuildStage.PreCreation);
+            Container.RegisterKnownByExtensionNamedType(typeBase, name);
         }
 
         public void RegisterStrictMockType<TBaseType, TType>(string name = "")
