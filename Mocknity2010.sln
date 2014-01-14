@@ -12,14 +12,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.2010", "Unity.2.1.505
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 1
+		SccNumberOfProjects = 2
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = http://spbtfs01:8080/
+		SccTeamFoundationServer = http://spbtfs02:8080/tfs/defaultcollection
 		SccProjectUniqueName0 = Mocknity\\Mocknity2010.csproj
 		SccProjectName0 = Mocknity
-		SccAuxPath0 = http://spbtfs01:8080
+		SccAuxPath0 = http://spbtfs02:8080/tfs/defaultcollection
 		SccLocalPath0 = Mocknity
 		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName1 = Unity.2.1.505.2-Source-and-Symbols\\Source\\Unity\\Src\\Unity.2010.csproj
+		SccProjectName1 = Unity.2.1.505.2-Source-and-Symbols/Source/Unity/Src
+		SccAuxPath1 = http://spbtfs02:8080/tfs/defaultcollection
+		SccLocalPath1 = Unity.2.1.505.2-Source-and-Symbols\\Source\\Unity\\Src
+		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Mocknity2.vsmdi

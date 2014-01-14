@@ -762,6 +762,36 @@ namespace MocknityTests
             Assert.AreEqual(3, mocks.Count());
         }
 
+        [TestMethod]
+        public void AfterType_WasResolved_FromParentUnity_MocksClassRegistration_ShouldWork_InChildUnity()
+        {
+            AfterType_WasResolved_FromParentUnity_MocksRegistration_ShouldWork_InChildUnity<FirstObjectImpl>();
+        }
+
+        [TestMethod]
+        public void AfterType_WasResolved_FromParentUnity_MocksInterfaceRegistration_ShouldWork_InChildUnity()
+        {
+            AfterType_WasResolved_FromParentUnity_MocksRegistration_ShouldWork_InChildUnity<IFirstObject>();
+        }
+
+        public void AfterType_WasResolved_FromParentUnity_MocksRegistration_ShouldWork_InChildUnity<T>() where T : class, IFirstObject
+        {
+            _ioc.RegisterType<EmptyType>();
+            var objImpl = _ioc.Resolve<EmptyType>();
+            IUnityContainer childContainer = _ioc.CreateChildContainer();
+
+            var mocks = new MockRepository();
+            var mocknity = new MocknityContainerExtension(mocks, false);
+            childContainer.AddExtension(mocknity);
+
+            mocknity.RegisterDynamicMock<T>();
+            var obj = childContainer.Resolve<T>(); //ioc returns fake type
+            obj.Stub(x => x.IntroduceYourself()).Return("t");
+            obj.Replay();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+
+        }
+
 
         private void CheckObjectIsPartialMock(IFirstObject obj)
         {
