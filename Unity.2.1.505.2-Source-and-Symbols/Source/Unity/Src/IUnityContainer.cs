@@ -178,5 +178,10 @@ namespace Microsoft.Practices.Unity
         /// <param name="t"></param>
         /// <param name="name"></param>
         void RegisterKnownByExtensionNamedType(Type t, string name);
+
+        /// <summary>
+        /// Method needed for extensions to make unity rebuild strategies chain in next resolve method called.
+        /// </summary>
+        void ClearCache();
     }
 }

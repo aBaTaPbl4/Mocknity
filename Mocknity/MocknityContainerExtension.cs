@@ -212,6 +212,7 @@ namespace Mocknity
             }
             Context.Strategies.Add(strategy, StrategiesStage);
             Container.RegisterKnownByExtensionNamedType(typeBase, name);
+            Container.ClearCache();
         }
 
         public void RegisterStrictMockType<TBaseType, TType>(string name = "")

@@ -666,5 +666,16 @@ namespace Microsoft.Practices.Unity
 
             registeredNames.RegisterType(t, name);
         }
+
+        /// <summary>
+        /// Method needed for extensions to make unity rebuild strategies chain in next resolve method called.
+        /// </summary>
+        public void ClearCache()
+        {
+            lock (cachedStrategiesLock)
+            {
+                cachedStrategies = null;
+            }
+        }
     }
 }

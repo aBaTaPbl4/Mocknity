@@ -316,16 +316,6 @@ namespace MocknityTests
             CheckObjectIsPartialMock(obj);
         }
 
-        [TestMethod, ExpectedException(typeof(InvalidOperationException))]
-        public void AfterType_WasResolved_FROMUnity_MocksRegistration_DoesNotWork()
-        {
-            _ioc.RegisterType<EmptyType>();
-            var objImpl = _ioc.Resolve<EmptyType>();
-            _mocknity.RegisterPartialMock<FirstObjectImpl>();
-            var obj = _ioc.Resolve<FirstObjectImpl>(); //ioc returns real type!!!
-            obj.Stub(x => x.IntroduceYourself()).Return("t");//exception occured
-        }
-
         public void CheckPartialMock(IFirstObject obj)
         {
             Assert.IsNotNull(obj);
@@ -885,7 +875,7 @@ namespace MocknityTests
         }
 
 
-        [TestMethod, Description("Added property PrivateRegistrations test")]
+        [TestMethod, Description("Added to unity property PrivateRegistrations test")]
         public void Unity_PrivateRegistrations_Specific_Test()
         {
             IUnityContainer rootContainer = new UnityContainer();
@@ -896,6 +886,16 @@ namespace MocknityTests
 
             rootContainer.RegisterType<EmptyType>();
             Assert.AreEqual(1, childContainer.PrivateRegistrations.Count());
+        }
+
+        [TestMethod, Description("Added to unity method ClearCache")]
+        public void AfterType_WasResolved_FROMUnity_MocksRegistration_Works()
+        {
+            _ioc.RegisterType<EmptyType>();
+            var objImpl = _ioc.Resolve<EmptyType>();
+            _mocknity.RegisterPartialMock<FirstObjectImpl>();
+            var obj = _ioc.Resolve<FirstObjectImpl>(); //ioc returns real type!!!
+            obj.Stub(x => x.IntroduceYourself()).Return("t");//exception occured
         }
 
         #endregion
