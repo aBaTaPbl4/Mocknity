@@ -6,7 +6,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mocknity;
 using Mocknity.Strategies.Rhino;
 using Rhino.Mocks;
+using Rhino.Mocks.Constraints;
 using Rhino.Mocks.Exceptions;
+using Rhino.Mocks.Interfaces;
 
 namespace MocknityTests
 {
@@ -685,6 +687,16 @@ namespace MocknityTests
         }
 
         [TestMethod]
+        public void RegisterMockTypeWithName_WhenDefaultInstnceIsDefined_ShouldFail()
+        {
+            _ioc.RegisterType<FirstObjectImpl>();
+            var name = "nm";
+            _mocknity.RegisterPartialMockType<FirstObjectImpl>(name);
+            var obj = _ioc.Resolve<FirstObjectImpl>(name);
+            CheckObjectIsReal(obj);
+        }
+
+        [TestMethod]
         public void RegisterMockTypeWithName_ShouldWork()
         {
             var name = "nm";
@@ -693,14 +705,7 @@ namespace MocknityTests
             CheckObjectIsPartialMock(obj1);
             var obj2 = _ioc.Resolve<FirstObjectImpl>(name);
             CheckObjectIsPartialMock(obj2);
-            Assert.AreNotEqual(obj1,obj2);
-        }
-
-        [TestMethod, ExpectedException(typeof(System.InvalidOperationException), "The object 'MocknityTests.FirstObjectImpl' is not a mocked object.")]
-        public void RegisterMockTypeWithName_WhenDefaultInstnceIsDefined_ShouldFail()
-        {
-            _ioc.RegisterType<FirstObjectImpl>();
-            RegisterMockTypeWithName_ShouldWork();
+            Assert.AreNotEqual(obj1, obj2);
         }
 
         [TestMethod]
@@ -778,11 +783,8 @@ namespace MocknityTests
         {
             _ioc.RegisterType<EmptyType>();
             var objImpl = _ioc.Resolve<EmptyType>();
-            IUnityContainer childContainer = _ioc.CreateChildContainer();
-
-            var mocks = new MockRepository();
-            var mocknity = new MocknityContainerExtension(mocks, false);
-            childContainer.AddExtension(mocknity);
+            var mocknity = CreateMocknityLocatedInNewChildContainer();
+            IUnityContainer childContainer = mocknity.Container;
 
             mocknity.RegisterDynamicMock<T>();
             var obj = childContainer.Resolve<T>(); //ioc returns fake type
@@ -792,14 +794,171 @@ namespace MocknityTests
 
         }
 
+        #region Resolve Order Tests
+        /// <summary>
+        /// Correct resolve order:
+        /// TypeToFind ==> childIoc =NotFound=> childMocknity =NotFound=> rootIoc =NotFound=> rootMocknity =NotFound=> Resolve Error
+        /// </summary>
+        [TestMethod]
+        public void First_ShouldResolveType_From_ChildIoc()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
+            IUnityContainer childContainer = childMocknity.Container;
+
+            childContainer.RegisterType<IFirstObject, FirstObjectImpl>(); //only checked container contains real object
+            childMocknity.RegisterDynamicMock<IFirstObject>();
+            rootMocknity.RegisterDynamicMock<IFirstObject>();
+            var mock = rootContainer.Resolve<IFirstObject>();
+            rootContainer.RegisterInstance(mock);
+
+            var obj = childContainer.Resolve<IFirstObject>();
+            CheckObjectIsReal(obj);
+        }
+
+        [TestMethod]
+        public void Second_ShouldResolveType_From_ChildMocknity()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
+            IUnityContainer childContainer = childMocknity.Container;
+
+            childMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>(); //only that one contains partial mock
+            rootMocknity.RegisterDynamicMock<IFirstObject>();
+            rootContainer.RegisterInstance<IFirstObject>(new FirstObjectImpl());
+
+            var obj = childContainer.Resolve<IFirstObject>();
+            CheckObjectIsPartialMock(obj);
+        }
+
+        [TestMethod]
+        public void Third_ShouldResolveType_From_RootContainer()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
+            IUnityContainer childContainer = childMocknity.Container;
+
+            rootMocknity.RegisterDynamicMock<IFirstObject>();
+            rootContainer.RegisterType<IFirstObject, FirstObjectImpl>();
+
+            var obj = childContainer.Resolve<IFirstObject>();
+            CheckObjectIsReal(obj);
+        }
+
+        [TestMethod]
+        public void Fourth_ShouldResolveType_From_RootMocknity()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
+            IUnityContainer childContainer = childMocknity.Container;
+
+            rootMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            var obj = childContainer.Resolve<IFirstObject>();
+            CheckObjectIsPartialMock(obj);
+        }
+
+
+        #endregion
+
+        #region Unity Specifics
+
+        [TestMethod]
+        public void Unity_Standard_Registrations_Specific_Test()
+        {
+            IUnityContainer rootContainer = new UnityContainer();
+            IUnityContainer childContainer = rootContainer.CreateChildContainer();
+
+            rootContainer.RegisterType<IFirstObject, FirstObjectImpl>();
+            Assert.AreEqual(2, childContainer.Registrations.Count());
+            rootContainer.RegisterType<EmptyType>();
+            Assert.AreEqual(3, childContainer.Registrations.Count());
+            //rootContainer.RegisterType<EmptyType>();
+            //rootContainer.RegisterType<FirstObjectImpl>();
+            //childContainer.RegisterInstance<IFirstObject>(_mocks.DynamicMock<IFirstObject>());
+
+            //var obj = childContainer.Resolve<IFirstObject>();
+            //CheckObjectIsMock(obj);
+        }
+
+
+        [TestMethod, Description("Added property PrivateRegistrations test")]
+        public void Unity_PrivateRegistrations_Specific_Test()
+        {
+            IUnityContainer rootContainer = new UnityContainer();
+            IUnityContainer childContainer = rootContainer.CreateChildContainer();
+
+            rootContainer.RegisterType<IFirstObject, FirstObjectImpl>();
+            Assert.AreEqual(1, childContainer.PrivateRegistrations.Count());
+
+            rootContainer.RegisterType<EmptyType>();
+            Assert.AreEqual(1, childContainer.PrivateRegistrations.Count());
+        }
+
+        #endregion
+
+        private MocknityContainerExtension CreateMocknityLocatedInNewChildContainer()
+        {
+            IUnityContainer childContainer = _ioc.CreateChildContainer();
+            var mocks = new MockRepository();
+            var mocknity = new MocknityContainerExtension(mocks, false);
+            childContainer.AddExtension(mocknity);
+            return mocknity;
+        }
+
+        private void CheckObjectIsReal(IFirstObject obj)
+        {
+            MockObjectCheck(obj, false);
+        }
+
+        private void CheckObjectIsMock(IFirstObject obj)
+        {
+            MockObjectCheck(obj, true);
+        }
+
+        private void MockObjectCheck(IFirstObject obj, bool expectedMock)
+        {
+            bool isMocked = obj is IMockedObject;
+            string errMessage;
+            if (expectedMock)
+            {
+                errMessage = "Expected mock object but it was not";
+            }
+            else
+            {
+                errMessage = "Expected real object but it was not";
+            }
+            Assert.AreEqual(expectedMock, isMocked, errMessage);
+        }
+
 
         private void CheckObjectIsPartialMock(IFirstObject obj)
         {
-            obj.Replay();
-            Assert.AreEqual(obj.GetType().Name, obj.IntroduceYourself());
-            obj.Stub(x => x.IntroduceYourself()).Return("t");
-            obj.Replay();
-            Assert.AreEqual("t",obj.IntroduceYourself());
+            try
+            {
+                obj.Replay();
+                Assert.AreEqual(obj.GetType().Name, obj.IntroduceYourself());
+                obj.Stub(x => x.IntroduceYourself()).Return("t");
+                obj.Replay();
+                Assert.AreEqual("t", obj.IntroduceYourself());
+            }
+            catch (Exception)
+            {
+                string errMessage;
+                bool isMocked = obj is IMockedObject;
+                if (isMocked)
+                {
+                    errMessage = "dynamic or partial mock!";
+                }
+                else
+                {
+                    errMessage = "real type!";
+                }
+                Assert.Fail("Expected partaial mock, but was {0}", errMessage);
+            }
         }
     }
 }

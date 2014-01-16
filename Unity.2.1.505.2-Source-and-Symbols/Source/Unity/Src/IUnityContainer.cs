@@ -168,6 +168,11 @@ namespace Microsoft.Practices.Unity
         IEnumerable<ContainerRegistration> Registrations { get; }
 
         /// <summary>
+        /// Get Container Registrations, except Parent Container Registrations
+        /// </summary>
+        IEnumerable<ContainerRegistration> PrivateRegistrations { get; }
+
+        /// <summary>
         /// Required to call this method from extension, ResolveAll method to work
         /// </summary>
         /// <param name="t"></param>

@@ -698,6 +698,20 @@ namespace Microsoft.Practices.Unity
             return container.IsRegistered(typeToCheck, null);
         }
 
+        ///<summary>
+        /// Check if a particular type has been privately registered with the container with
+        /// the default name.
+        ///</summary>
+        ///<param name="container">Container to inspect.</param>
+        ///<param name="typeToCheck">Type to check registration for.</param>
+        ///<returns>True if this type has been registered, false if not.</returns>
+        public static bool IsRegisteredPrivate(this IUnityContainer container, Type typeToCheck)
+        {
+            Guard.ArgumentNotNull(container, "container");
+            Guard.ArgumentNotNull(typeToCheck, "typeToCheck");
+            return container.IsRegisteredPrivate(typeToCheck, null);
+        }
+
         /// <summary>
         /// Check if a particular type/name pair has been registered with the container.
         /// </summary>
@@ -711,6 +725,24 @@ namespace Microsoft.Practices.Unity
             Guard.ArgumentNotNull(typeToCheck, "typeToCheck");
 
             var registration = from r in container.Registrations
+                               where r.RegisteredType == typeToCheck && r.Name == nameToCheck
+                               select r;
+            return registration.FirstOrDefault() != null;
+        }
+
+        /// <summary>
+        /// Check if a particular type/name pair has been registered with the container.
+        /// </summary>
+        /// <param name="container">Container to inspect.</param>
+        /// <param name="typeToCheck">Type to check registration for.</param>
+        /// <param name="nameToCheck">Name to check registration for.</param>
+        /// <returns>True if this type/name pair has been registered, false if not.</returns>
+        public static bool IsRegisteredPrivate(this IUnityContainer container, Type typeToCheck, string nameToCheck)
+        {
+            Guard.ArgumentNotNull(container, "container");
+            Guard.ArgumentNotNull(typeToCheck, "typeToCheck");
+
+            var registration = from r in container.PrivateRegistrations
                                where r.RegisteredType == typeToCheck && r.Name == nameToCheck
                                select r;
             return registration.FirstOrDefault() != null;
