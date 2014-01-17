@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Practices.Unity;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mocknity;
@@ -899,6 +900,15 @@ namespace MocknityTests
         }
 
         #endregion
+
+        //[TestMethod]
+        //public void RegisterPartialMockType_WithDefinedStubBehaviour_Should_Work()
+        //{
+        //    _mocknity.RegisterPartialMockType<FirstObjectImpl>(x => x.Stub(y => y.IntroduceYourself()).Return("t"));
+        //    var obj = _ioc.Resolve<FirstObjectImpl>();
+        //    Assert.AreEqual("t", obj.IntroduceYourself());
+
+        //}
 
         private MocknityContainerExtension CreateMocknityLocatedInNewChildContainer()
         {
