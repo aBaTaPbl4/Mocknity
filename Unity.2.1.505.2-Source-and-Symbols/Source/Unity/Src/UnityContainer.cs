@@ -596,6 +596,24 @@ namespace Microsoft.Practices.Unity
             }
         }
 
+        /// <summary>
+        /// Get Container Registrations, except Parent Container Registrations
+        /// </summary>
+        public IEnumerable<ContainerRegistration> PrivateRegistrations
+        {
+            get
+            {
+                var allRegisteredNames = new Dictionary<Type, List<string>>();
+                FillPrivateTypeRegistrations(allRegisteredNames);
+
+                return
+                    from type in allRegisteredNames.Keys
+                    from name in allRegisteredNames[type]
+                    select new ContainerRegistration(type, name, policies);
+            }
+        }
+
+
 
         /// <summary>
         /// Remove policies associated with building this type. This removes the
@@ -618,10 +636,15 @@ namespace Microsoft.Practices.Unity
             {
                 parent.FillTypeRegistrationDictionary(typeRegistrations);
             }
+            FillPrivateTypeRegistrations(typeRegistrations);
+        }
 
-            foreach(Type t in registeredNames.RegisteredTypes)
+        private void FillPrivateTypeRegistrations(IDictionary<Type, List<string>> typeRegistrations)
+        {
+
+            foreach (Type t in registeredNames.RegisteredTypes)
             {
-                if(!typeRegistrations.ContainsKey(t))
+                if (!typeRegistrations.ContainsKey(t))
                 {
                     typeRegistrations[t] = new List<string>();
                 }
@@ -631,12 +654,28 @@ namespace Microsoft.Practices.Unity
             }
         }
 
+        /// <summary>
+        /// Register known by extension named type
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="name"></param>
         public void RegisterKnownByExtensionNamedType(Type t, string name)
         {
             if (string.IsNullOrEmpty(name))
                 return;
 
             registeredNames.RegisterType(t, name);
+        }
+
+        /// <summary>
+        /// Method needed for extensions to make unity rebuild strategies chain in next resolve method called.
+        /// </summary>
+        public void ClearCache()
+        {
+            lock (cachedStrategiesLock)
+            {
+                cachedStrategies = null;
+            }
         }
     }
 }

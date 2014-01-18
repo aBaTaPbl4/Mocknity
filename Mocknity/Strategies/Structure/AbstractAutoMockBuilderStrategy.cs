@@ -97,7 +97,7 @@ namespace Mocknity.Strategies.Structure
                 return;
             }
 
-            if (!mocknity.getContainer().IsRegistered(buildKey.Type))
+            if (!mocknity.getContainer().IsRegisteredPrivate(buildKey.Type))
             {
                 Type typeToSearch = buildKey.Type.IsInterface ? buildKey.Type : _implType;
                 if (OnlyOneMockCreation)

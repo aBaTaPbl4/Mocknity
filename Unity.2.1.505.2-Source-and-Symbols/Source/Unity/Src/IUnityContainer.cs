@@ -168,10 +168,20 @@ namespace Microsoft.Practices.Unity
         IEnumerable<ContainerRegistration> Registrations { get; }
 
         /// <summary>
+        /// Get Container Registrations, except Parent Container Registrations
+        /// </summary>
+        IEnumerable<ContainerRegistration> PrivateRegistrations { get; }
+
+        /// <summary>
         /// Required to call this method from extension, ResolveAll method to work
         /// </summary>
         /// <param name="t"></param>
         /// <param name="name"></param>
         void RegisterKnownByExtensionNamedType(Type t, string name);
+
+        /// <summary>
+        /// Method needed for extensions to make unity rebuild strategies chain in next resolve method called.
+        /// </summary>
+        void ClearCache();
     }
 }

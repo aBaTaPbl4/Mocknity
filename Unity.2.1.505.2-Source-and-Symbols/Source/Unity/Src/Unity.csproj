@@ -9,7 +9,8 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.Practices.Unity</RootNamespace>
-    <AssemblyName>Microsoft.Practices.Unity</AssemblyName><FileUpgradeFlags>
+    <AssemblyName>Microsoft.Practices.Unity</AssemblyName>
+    <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation>
@@ -64,6 +65,9 @@
     <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Lib\Desktop\Microsoft.Practices.ServiceLocation.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\..\packages\Moq.4.2.1312.1622\lib\net35\Moq.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -242,6 +246,7 @@
     <Compile Include="Utility\StaticReflection.cs" />
     <None Include="Migrated rules for Unity %282%29.ruleset" />
     <None Include="Migrated rules for Unity.ruleset" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

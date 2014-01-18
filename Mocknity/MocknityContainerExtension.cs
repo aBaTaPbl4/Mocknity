@@ -16,6 +16,7 @@ namespace Mocknity
         private readonly Dictionary<string, Dictionary<Type, object>> mocks;
         private readonly Dictionary<string, Dictionary<Type, Type>> strategiesMapping;
         private IAutoMockBuilderStrategy _defaultStrategy;
+        private const UnityBuildStage StrategiesStage = UnityBuildStage.TypeMapping;
         protected MockRepository repository;
 
         public MocknityContainerExtension(MockRepository repository, bool mockUnregisteredInterfaces = false)
@@ -152,7 +153,7 @@ namespace Mocknity
             {
                 _defaultStrategy = new DynamicRhinoMocksBuilderStrategy(this, null, null);
                 _defaultStrategy.IsDefault = true;
-                Context.Strategies.Add(_defaultStrategy, UnityBuildStage.PreCreation);
+                Context.Strategies.Add(_defaultStrategy, StrategiesStage);
             }
         }
 
@@ -183,7 +184,7 @@ namespace Mocknity
             mocks.Clear();
             strategiesMapping.Clear();
             Context.Strategies.Clear();
-            Context.Strategies.Add(_defaultStrategy, UnityBuildStage.PreCreation);
+            Context.Strategies.Add(_defaultStrategy, StrategiesStage);
         }
 
         public void SetStrategy<T>(Type type, bool onlyOneMockCreate = true, string name = "", params TypedInjectionValue[] resolveParams)
@@ -209,8 +210,9 @@ namespace Mocknity
             {
                 AddMapping<T>(typeImpl, name);
             }
-            Context.Strategies.Add(strategy, UnityBuildStage.PreCreation);
+            Context.Strategies.Add(strategy, StrategiesStage);
             Container.RegisterKnownByExtensionNamedType(typeBase, name);
+            Container.ClearCache();
         }
 
         public void RegisterStrictMockType<TBaseType, TType>(string name = "")
