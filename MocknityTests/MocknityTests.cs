@@ -209,13 +209,14 @@ namespace MocknityTests
 
         [TestMethod]
         public void ResolveObjectWithExpectedCall__GetDesiredResult()
-        {
+        {            
             var od = _ioc.Resolve<ObjectWithDependencies>();
-
-            Expect.Call(od.secondObject.HelloWorld()).Return("I'm the first of none");
-            _mocknity.getRepository().ReplayAll();
+            using (_mocks.Record())
+            {
+                Expect.Call(od.secondObject.HelloWorld()).Return("I'm the first of none");    
+            }
             Assert.AreEqual("I'm the first of none", od.PokeSecond());
-            _mocknity.getRepository().VerifyAll();
+            _mocks.VerifyAll();
         }
 
         [TestMethod]
@@ -901,14 +902,54 @@ namespace MocknityTests
 
         #endregion
 
-        //[TestMethod]
-        //public void RegisterPartialMockType_WithDefinedStubBehaviour_Should_Work()
-        //{
-        //    _mocknity.RegisterPartialMockType<FirstObjectImpl>(x => x.Stub(y => y.IntroduceYourself()).Return("t"));
-        //    var obj = _ioc.Resolve<FirstObjectImpl>();
-        //    Assert.AreEqual("t", obj.IntroduceYourself());
 
-        //}
+        [TestMethod]
+        public void RegisterPartialMockType_WithDefinedStubBehaviour_Should_Work()
+        {
+            _mocknity.RegisterPartialMockType<FirstObjectImpl>(x => x.Stub(y => y.IntroduceYourself()).Return("t"));
+            var obj = _ioc.Resolve<FirstObjectImpl>();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
+
+        [TestMethod]
+        public void RegisterStrictMockType_WithDefinedStubBehaviour_Should_Work()
+        {
+            _mocknity.RegisterStrictMockType<IFirstObject>(x => x.Stub(y => y.IntroduceYourself()).Return("t"));
+            var obj = _ioc.Resolve<IFirstObject>();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
+
+        [TestMethod]
+        public void RegisterDynamicMockType_WithDefinedStubBehaviour_Should_Work()
+        {
+            _mocknity.RegisterDynamicMockType<FirstObjectImpl>(x => x.Stub(y => y.IntroduceYourself()).Return("t"));
+            var obj = _ioc.Resolve<FirstObjectImpl>();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
+
+        [TestMethod]
+        public void RegisterStubType_WithDefinedStubBehaviour_Should_Work()
+        {
+            _mocknity.RegisterStubType<FirstObjectImpl>(x => x.Stub(y => y.IntroduceYourself()).Return("t"));
+            var obj = _ioc.Resolve<FirstObjectImpl>();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
+
+        [TestMethod]
+        public void RegisterPartialMockType_WithDefinedStubBehaviour_Should_Work_ImplType()
+        {
+            _mocknity.RegisterPartialMockType<IFirstObject, FirstObjectImpl>(x => x.Stub(y => y.IntroduceYourself()).Return("t"));
+            var obj = _ioc.Resolve<FirstObjectImpl>();
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
+
+        [TestMethod]
+        public void RegisterPartialMockType_WithDefinedStubBehaviour_Should_Work_WithName()
+        {
+            _mocknity.RegisterPartialMockType<FirstObjectImpl>("test", x => x.Stub(y => y.IntroduceYourself()).Return("t"));
+            var obj = _ioc.Resolve<FirstObjectImpl>("test");
+            Assert.AreEqual("t", obj.IntroduceYourself());
+        }
 
         private MocknityContainerExtension CreateMocknityLocatedInNewChildContainer()
         {

@@ -7,7 +7,7 @@ using Microsoft.Practices.Unity;
 
 namespace Mocknity.Strategies.Rhino
 {
-    public class PartialRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy<DynamicRhinoMocksBuilderStrategy>
+    public class PartialRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy
     {
         public PartialRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType) 
             : base(mocknity, baseType, implType)
@@ -17,7 +17,9 @@ namespace Mocknity.Strategies.Rhino
         public override object CreateMockByInterface(Type type)
         {
             //rhino throws exception
-            return repository.PartialMock(type);
+            var mock = repository.PartialMock(type);
+            Stub(mock);
+            return mock;
         }
 
         public override object CreateMockByType(Type type)
@@ -25,10 +27,11 @@ namespace Mocknity.Strategies.Rhino
             object[] parms = GetConstructorArguments(type);
             object mock = repository.PartialMock(type, parms);
             InitDependencyProperties(mock, type);
+            Stub(mock);
             if (mocknity.AutoReplayPartialMocks)
             {
-                mock.Replay();    
-            }            
+               mock.Replay(); 
+            }
             return mock;
             
         }

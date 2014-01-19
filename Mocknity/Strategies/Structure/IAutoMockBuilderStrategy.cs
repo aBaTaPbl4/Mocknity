@@ -12,5 +12,7 @@ namespace Mocknity.Strategies.Structure
         bool OnlyOneMockCreation { get; set; }
         string Name { get; set; }
         TypedInjectionValue[] ConstructorParameters { get; set; }
+
+        StubAction StubAction { get; set; }
     }
 }

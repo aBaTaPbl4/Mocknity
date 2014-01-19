@@ -26,18 +26,19 @@ namespace Mocknity
             this.repository = repository;
             MockUnregisteredInterfaces = mockUnregisteredInterfaces;
             AutoReplayPartialMocks = true;
+            AutoReplayStubbedMocks = true;
         }
 
         #region IMocknityExtensionConfiguration Members
 
-        public bool CheckStrategyMapping<T>(Type type, string name)
+        public bool CheckStrategyMapping<TStrategy>(Type type, string name)
         {
             if (!strategiesMapping.ContainsKey(name))
             {
                 return false;
             }
             var mappings = strategiesMapping[name];
-            if (mappings.ContainsKey(type) && mappings[type] == typeof (T))
+            if (mappings.ContainsKey(type) && mappings[type] == typeof (TStrategy))
             {
                 return true;
             }
@@ -47,9 +48,9 @@ namespace Mocknity
             }
         }
 
-        public object GetMock<T>(string name)
+        public object GetMock<TType>(string name)
         {
-            Type key = typeof (T);
+            Type key = typeof (TType);
             return GetMock(key, name);
         }
 
@@ -104,9 +105,9 @@ namespace Mocknity
             return mcks.ContainsKey(key);
         }
 
-        public bool ContainsMock<T>(string name)
+        public bool ContainsMock<TType>(string name)
         {
-            Type key = typeof (T);
+            Type key = typeof (TType);
             return ContainsMock(key, name);
         }
 
@@ -138,7 +139,7 @@ namespace Mocknity
         public bool MockUnregisteredInterfaces { get; set; }
 
         public bool AutoReplayPartialMocks { get; set; }
-
+        public bool AutoReplayStubbedMocks { get; set; }
 
         #endregion
 
@@ -157,16 +158,17 @@ namespace Mocknity
             }
         }
 
-        private IAutoMockBuilderStrategy CreateBuilderStrategy<T>(Type baseType, Type implType, string name, params TypedInjectionValue[] resolveParams)
+        private IAutoMockBuilderStrategy CreateBuilderStrategy<TStrategy>(Type baseType, Type implType, string name, StubAction stubAction, params TypedInjectionValue[] resolveParams)
         {
-            Type builderImpl = typeof (T).GetInterface(typeof (IBuilderStrategy).Name);
+            Type builderImpl = typeof (TStrategy).GetInterface(typeof (IBuilderStrategy).Name);
             if (builderImpl != null)
             {
                 var strategy = 
                     (IAutoMockBuilderStrategy)
-                    Activator.CreateInstance(typeof (T), new object[] {this, baseType, implType});
+                    Activator.CreateInstance(typeof (TStrategy), new object[] {this, baseType, implType});
                 strategy.Name = name;
                 strategy.ConstructorParameters = resolveParams;
+                strategy.StubAction = stubAction;
                 return strategy;
             }
             throw new ArgumentException("Type must implement IAutoMockBuilderStrategy interface", "typeBase");
@@ -176,9 +178,9 @@ namespace Mocknity
         /// Set default strategy. Required using first, because clear all previous mappings
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public void SetDefaultStrategy<T>()
+        public void SetDefaultStrategy<TStrategy>()
         {
-            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<T>(null, null, "");
+            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<TStrategy>(null, null, "", null);
             strategy.IsDefault = true;
             _defaultStrategy = strategy;
             mocks.Clear();
@@ -187,14 +189,14 @@ namespace Mocknity
             Context.Strategies.Add(_defaultStrategy, StrategiesStage);
         }
 
-        public void SetStrategy<T>(Type type, bool onlyOneMockCreate = true, string name = "", params TypedInjectionValue[] resolveParams)
+        public void SetStrategy<TStrategy>(Type type, bool onlyOneMockCreate = true, string name = "",  StubAction stubAction = null, params TypedInjectionValue[] resolveParams)
         {
-            SetStrategy<T>(type, type, onlyOneMockCreate, name, resolveParams);
+            SetStrategy<TStrategy>(type, type, onlyOneMockCreate, name, stubAction, resolveParams);
         }
 
-        private void SetStrategy<T>(Type typeBase, Type typeImpl, bool onlyOneMockCreate, string name, params TypedInjectionValue[] resolveParams)
+        private void SetStrategy<TStrategy>(Type typeBase, Type typeImpl, bool onlyOneMockCreate, string name, StubAction stubAction = null, params TypedInjectionValue[] resolveParams)
         {
-            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<T>(typeBase, typeImpl, name, resolveParams);
+            IAutoMockBuilderStrategy strategy = CreateBuilderStrategy<TStrategy>(typeBase, typeImpl, name, stubAction, resolveParams);
             strategy.OnlyOneMockCreation = onlyOneMockCreate;
 
             if (ContainsMapping(typeBase, name))
@@ -205,19 +207,19 @@ namespace Mocknity
             {
                 RemoveMapping(typeImpl, name);            
             }            
-            AddMapping<T>(typeBase, name);
+            AddMapping<TStrategy>(typeBase, name);
             if (typeBase != typeImpl)
             {
-                AddMapping<T>(typeImpl, name);
+                AddMapping<TStrategy>(typeImpl, name);
             }
             Context.Strategies.Add(strategy, StrategiesStage);
             Container.RegisterKnownByExtensionNamedType(typeBase, name);
             Container.ClearCache();
         }
 
-        public void RegisterStrictMockType<TBaseType, TType>(string name = "")
+        public void RegisterStrictMockType<TBaseType, TImplType>(string name = "")
         {
-            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name);
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name);
         }
 
         public void RegisterStrictMockType<TType>(string name = "")
@@ -225,9 +227,34 @@ namespace Mocknity
             SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TType), false, name);
         }
 
-        public void RegisterStrictMock<TBaseType, TType>(string name = "")
+                    
+        public void RegisterStrictMockType<TBaseType, TImplType>(Action<TImplType> stubAction)
         {
-            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, name);
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, "", actionWrap);
+        }
+
+        public void RegisterStrictMockType<TType>(Action<TType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TType), false, "", actionWrap);
+        }
+
+        public void RegisterStrictMockType<TBaseType, TImplType>(string name, Action<TImplType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name, actionWrap);
+        }
+
+        public void RegisterStrictMockType<TType>(string name, Action<TType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TType), false, name, actionWrap);
+        }
+
+        public void RegisterStrictMock<TBaseType, TImplType>(string name = "")
+        {
+            SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), true, name);
         }
 
         public void RegisterStrictMock<TType>(string name = "")
@@ -235,9 +262,9 @@ namespace Mocknity
             SetStrategy<StrictRhinoMocksBuilderStrategy>(typeof (TType), true, name);
         }
 
-        public void RegisterDynamicMockType<TBaseType, TType>(string name = "")
+        public void RegisterDynamicMockType<TBaseType, TImplType>(string name = "")
         {
-            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name);
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name);
         }
 
         public void RegisterDynamicMockType<TType>(string name = "")
@@ -245,9 +272,33 @@ namespace Mocknity
             SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TType), false, name);
         }
 
-        public void RegisterDynamicMock<TBaseType, TType>(string name = "")
+        public void RegisterDynamicMockType<TBaseType, TImplType>(Action<TImplType> stubAction)
         {
-            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, name);
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, "", actionWrap);
+        }
+
+        public void RegisterDynamicMockType<TType>(Action<TType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TType), false, "", actionWrap);
+        }
+
+        public void RegisterDynamicMockType<TBaseType, TImplType>(string name, Action<TImplType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name, actionWrap);
+        }
+
+        public void RegisterDynamicMockType<TType>(string name, Action<TType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TType), false, name, actionWrap);
+        }
+
+        public void RegisterDynamicMock<TBaseType, TImplType>(string name = "")
+        {
+            SetStrategy<DynamicRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), true, name);
         }
 
         public void RegisterDynamicMock<TType>(string name = "")
@@ -257,9 +308,9 @@ namespace Mocknity
 
 
 
-        public void RegisterPartialMock<TBaseType, TType>(string name = "")
+        public void RegisterPartialMock<TBaseType, TImplType>(string name = "")
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, name);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), true, name);
         }
 
         public void RegisterPartialMock<TType>(string name = "")
@@ -269,28 +320,28 @@ namespace Mocknity
 
         public void RegisterPartialMock<TType>(params TypedInjectionValue[] resolveParamOverrides)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), true, "", resolveParamOverrides);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), true, "", null, resolveParamOverrides);
         }
 
         public void RegisterPartialMock<TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), true, name, resolveParamOverrides);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), true, name, null, resolveParamOverrides);
         }
 
 
-        public void RegisterPartialMock<TBaseType, TType>(params TypedInjectionValue[] resolveParamOverrides)
+        public void RegisterPartialMock<TBaseType, TImplType>(params TypedInjectionValue[] resolveParamOverrides)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, "", resolveParamOverrides);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), true, "", null, resolveParamOverrides);
         }
 
-        public void RegisterPartialMock<TBaseType, TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
+        public void RegisterPartialMock<TBaseType, TImplType>(string name, params TypedInjectionValue[] resolveParamOverrides)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, name, resolveParamOverrides);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), true, name, null, resolveParamOverrides);
         }
 
-        public void RegisterPartialMockType<TBaseType, TType>(string name = "")
+        public void RegisterPartialMockType<TBaseType, TImplType>(string name = "")
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name);
         }
 
         public void RegisterPartialMockType<TType>(string name = "")
@@ -298,24 +349,48 @@ namespace Mocknity
             SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, name);
         }
 
-        public void RegisterPartialMockType<TBaseType, TType>(params TypedInjectionValue[] resolveParamOverrides)
+        public void RegisterPartialMockType<TType>(Action<TType> stubAction)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, "", resolveParamOverrides);
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, "", actionWrap);
+        }
+
+        public void RegisterPartialMockType<TBaseType, TImplType>(Action<TImplType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, "", actionWrap );
+        }
+
+        public void RegisterPartialMockType<TType>(string name, Action<TType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, name, actionWrap);
+        }
+        
+        public void RegisterPartialMockType<TBaseType, TImplType>(string name, Action<TImplType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name, actionWrap);
+        }
+
+        public void RegisterPartialMockType<TBaseType, TImplType>(params TypedInjectionValue[] resolveParamOverrides)
+        {
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, "", null, resolveParamOverrides);
         }
 
         public void RegisterPartialMockType<TType>(params TypedInjectionValue[] resolveParamOverrides)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, "", resolveParamOverrides);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, "", null, resolveParamOverrides);
         }
 
         public void RegisterPartialMockType<TBaseType, TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name, resolveParamOverrides);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name, null, resolveParamOverrides);
         }
 
         public void RegisterPartialMockType<TType>(string name, params TypedInjectionValue[] resolveParamOverrides)
         {
-            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, name, resolveParamOverrides);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, name, null, resolveParamOverrides);
         }
 
         public void RegisterStub<TType>(string name = "")
@@ -323,9 +398,34 @@ namespace Mocknity
             SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TType), true, name);
         }
 
-        public void RegisterStub<TBaseType, TType>(string name = "")
+
+        public void RegisterStub<TBaseType, TImplType>(string name = "")
         {
-            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), true, name);
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), true, name);
+        }
+
+        public void RegisterStubType<TType>(string name, Action<TType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TType), false, name, actionWrap);
+        }
+
+        public void RegisterStubType<TType>(Action<TType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TType), false, "", actionWrap);
+        }
+
+        public void RegisterStubType<TBaseType, TImplType>(Action<TImplType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, "", actionWrap);
+        }
+
+        public void RegisterStubType<TBaseType, TImplType>(string name, Action<TImplType> stubAction)
+        {
+            var actionWrap = new StubActionGeneric<TImplType>(stubAction);
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name, actionWrap);
         }
 
         public void RegisterStubType<TType>(string name = "")
@@ -333,9 +433,9 @@ namespace Mocknity
             SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TType), false, name);
         }
 
-        public void RegisterStubType<TBaseType, TType>(string name = "")
+        public void RegisterStubType<TBaseType, TImplType>(string name = "")
         {
-            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TType), false, name);
+            SetStrategy<StubRhinoMocksBuilderStrategy>(typeof(TBaseType), typeof(TImplType), false, name);
         }
     }
 }

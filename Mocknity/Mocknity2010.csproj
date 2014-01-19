@@ -149,6 +149,8 @@
     <Compile Include="Strategies\Rhino\StubRhinoMocksBuilderStrategy.cs" />
     <Compile Include="Strategies\Structure\AbstractAutoMockBuilderStrategy.cs" />
     <Compile Include="Strategies\Structure\IAutoMockBuilderStrategy.cs" />
+    <Compile Include="Strategies\Structure\StubAction.cs" />
+    <Compile Include="Strategies\Structure\StubActionGeneric.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

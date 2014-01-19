@@ -2,7 +2,7 @@
 
 namespace Mocknity.Strategies.Rhino
 {
-    public class DynamicRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy<DynamicRhinoMocksBuilderStrategy>
+    public class DynamicRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy
     {
         public DynamicRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType) : 
             base(mocknity, baseType, implType)
@@ -11,12 +11,16 @@ namespace Mocknity.Strategies.Rhino
 
         public override object CreateMockByInterface(Type type)
         {
-            return repository.DynamicMock(type);
+            var mock = repository.DynamicMock(type);
+            Stub(mock);
+            return mock;
         }
 
         public override object CreateMockByType(Type type)
         {
-            return repository.DynamicMock(type, GetConstructorArguments(type));
+            var mock = repository.DynamicMock(type, GetConstructorArguments(type));
+            Stub(mock);
+            return mock;
         }
     }
 }

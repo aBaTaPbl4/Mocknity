@@ -8,7 +8,7 @@ using Rhino.Mocks;
 
 namespace Mocknity.Strategies.Rhino
 {
-    public abstract class AbstractRhinoMocksBuilderStrategy<T> : AbstractAutoMockBuilderStrategy
+    public abstract class AbstractRhinoMocksBuilderStrategy : AbstractAutoMockBuilderStrategy
     {
         private readonly IUnityContainer unityContainer;
         protected MockRepository repository;

@@ -2,7 +2,7 @@
 
 namespace Mocknity.Strategies.Rhino
 {
-    public class StubRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy<StubRhinoMocksBuilderStrategy>
+    public class StubRhinoMocksBuilderStrategy : AbstractRhinoMocksBuilderStrategy
     {
         public StubRhinoMocksBuilderStrategy(IMocknityExtensionConfiguration mocknity, Type baseType, Type implType) 
             : base(mocknity, baseType, implType)
@@ -11,12 +11,16 @@ namespace Mocknity.Strategies.Rhino
 
         public override object CreateMockByInterface(Type type)
         {
-            return repository.Stub(type);
+            var mock = repository.Stub(type);
+            Stub(mock);
+            return mock;
         }
 
         public override object CreateMockByType(Type type)
         {
-            return repository.Stub(type, GetConstructorArguments(type));
+            var mock = repository.Stub(type, GetConstructorArguments(type));
+            Stub(mock);
+            return mock;
         }
     }
 }

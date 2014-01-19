@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Practices.ObjectBuilder2;
 using Microsoft.Practices.Unity;
+using Rhino.Mocks;
 
 namespace Mocknity.Strategies.Structure
 {
@@ -29,8 +30,22 @@ namespace Mocknity.Strategies.Structure
         public bool IsDefault { get; set; }
         public bool OnlyOneMockCreation { get; set; }
         public string Name { get; set; }
+        public StubAction StubAction { get; set; }
+
         public TypedInjectionValue[] ConstructorParameters { get; set; }
         protected IBuilderContext BuilderContext { get; private set; }
+
+        protected void Stub(object mock)
+        {
+            if (StubAction != null)
+            {
+                this.StubAction.Execute(mock);
+                if (mocknity.AutoReplayStubbedMocks)
+                {
+                    mock.Replay();
+                } 
+            }
+        }
 
         protected TypedInjectionValue GetOverridenParameter(Type paramType)
         {
