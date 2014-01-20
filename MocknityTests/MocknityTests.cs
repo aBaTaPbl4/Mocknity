@@ -775,10 +775,11 @@ namespace MocknityTests
         {
             _ioc.RegisterType<EmptyType>();
             var objImpl = _ioc.Resolve<EmptyType>();
-            var mocknity = CreateMocknityLocatedInNewChildContainer();
-            IUnityContainer childContainer = mocknity.Container;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);             
 
-            mocknity.RegisterDynamicMock<T>();
+            childMocknity.RegisterDynamicMock<T>();
             var obj = childContainer.Resolve<T>(); //ioc returns fake type
             obj.Stub(x => x.IntroduceYourself()).Return("t");
             obj.Replay();
@@ -796,8 +797,9 @@ namespace MocknityTests
         {
             IUnityContainer rootContainer = _ioc;
             MocknityContainerExtension rootMocknity = _mocknity;
-            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
-            IUnityContainer childContainer = childMocknity.Container;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);             
 
             childContainer.RegisterType<IFirstObject, FirstObjectImpl>(); //only checked container contains real object
             childMocknity.RegisterDynamicMock<IFirstObject>();
@@ -814,8 +816,9 @@ namespace MocknityTests
         {
             IUnityContainer rootContainer = _ioc;
             MocknityContainerExtension rootMocknity = _mocknity;
-            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
-            IUnityContainer childContainer = childMocknity.Container;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);             
 
             childMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>(); //only that one contains partial mock
             rootMocknity.RegisterDynamicMock<IFirstObject>();
@@ -830,8 +833,9 @@ namespace MocknityTests
         {
             IUnityContainer rootContainer = _ioc;
             MocknityContainerExtension rootMocknity = _mocknity;
-            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
-            IUnityContainer childContainer = childMocknity.Container;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);             
 
             rootMocknity.RegisterDynamicMock<IFirstObject>();
             rootContainer.RegisterType<IFirstObject, FirstObjectImpl>();
@@ -845,8 +849,9 @@ namespace MocknityTests
         {
             IUnityContainer rootContainer = _ioc;
             MocknityContainerExtension rootMocknity = _mocknity;
-            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
-            IUnityContainer childContainer = childMocknity.Container;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);             
 
             rootMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
             var obj = childContainer.Resolve<IFirstObject>();
@@ -858,14 +863,48 @@ namespace MocknityTests
         {
             IUnityContainer rootContainer = _ioc;
             MocknityContainerExtension rootMocknity = _mocknity;
-            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
-            IUnityContainer childContainer = childMocknity.Container;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);             
 
-            rootMocknity.RegisterPartialMock<FirstObjectImpl>();
-            var obj1 = rootContainer.Resolve<FirstObjectImpl>();
-            childMocknity.RegisterPartialMock<FirstObjectImpl>();
-            var obj2 = childContainer.Resolve<FirstObjectImpl>();
+            rootMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            var obj1 = rootContainer.Resolve<IFirstObject>();
+            childMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl2>();
+            var obj2 = childContainer.Resolve<IFirstObject>();
             Assert.AreNotEqual(obj1, obj2);
+        }
+
+        [TestMethod]
+        public void AllowFreeRegistration_InDifferentExtensions_Test()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity, rootContainer);
+
+            MocknityContainerExtension childChildMocknity;
+            IUnityContainer childChildContainer;
+            InitChildContainer(out childChildContainer, out childChildMocknity, childContainer);
+            rootMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            var obj1 = rootContainer.Resolve<IFirstObject>();
+            childMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl2>();
+            var obj2 = childContainer.Resolve<IFirstObject>();
+            Assert.AreNotEqual(obj1, obj2);
+            childChildMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            var obj3 = childChildContainer.Resolve<IFirstObject>();
+            Assert.AreNotEqual(obj1, obj3);
+            Assert.AreNotEqual(obj2, obj3);
+        }
+
+        private void InitChildContainer(out IUnityContainer childContainer, out MocknityContainerExtension mocknity, IUnityContainer parentContainer = null)
+        {
+            parentContainer = parentContainer ?? _ioc;
+            childContainer = parentContainer.CreateChildContainer();
+            var mocks = new MockRepository();
+            mocknity = new MocknityContainerExtension(mocks, false);
+            childContainer.AddExtension(mocknity);
         }
 
 
@@ -964,15 +1003,6 @@ namespace MocknityTests
             _mocknity.RegisterPartialMockType<FirstObjectImpl>("test", x => x.Stub(y => y.IntroduceYourself()).Return("t"));
             var obj = _ioc.Resolve<FirstObjectImpl>("test");
             Assert.AreEqual("t", obj.IntroduceYourself());
-        }
-
-        private MocknityContainerExtension CreateMocknityLocatedInNewChildContainer()
-        {
-            IUnityContainer childContainer = _ioc.CreateChildContainer();
-            var mocks = new MockRepository();
-            var mocknity = new MocknityContainerExtension(mocks, false);
-            childContainer.AddExtension(mocknity);
-            return mocknity;
         }
 
         private void CheckObjectIsReal(IFirstObject obj)

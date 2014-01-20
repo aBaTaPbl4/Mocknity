@@ -130,7 +130,7 @@ namespace Mocknity.Strategies.Structure
                 {
                     context.Existing = CreateMock(buildKey);
                 }
-                context.BuildComplete = true;
+                context.BuildComplete = false;
             }
         }
 
