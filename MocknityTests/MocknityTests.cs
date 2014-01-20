@@ -853,6 +853,21 @@ namespace MocknityTests
             CheckObjectIsPartialMock(obj);
         }
 
+        [TestMethod]
+        public void AllowTwoRegistration_InDifferentExtensions_Test()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity = CreateMocknityLocatedInNewChildContainer();
+            IUnityContainer childContainer = childMocknity.Container;
+
+            rootMocknity.RegisterPartialMock<FirstObjectImpl>();
+            var obj1 = rootContainer.Resolve<FirstObjectImpl>();
+            childMocknity.RegisterPartialMock<FirstObjectImpl>();
+            var obj2 = childContainer.Resolve<FirstObjectImpl>();
+            Assert.AreNotEqual(obj1, obj2);
+        }
+
 
         #endregion
 
