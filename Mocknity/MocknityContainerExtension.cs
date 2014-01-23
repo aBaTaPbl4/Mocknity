@@ -355,6 +355,12 @@ namespace Mocknity
             SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, "", actionWrap);
         }
 
+        public void RegisterPartialMockType<TType>(Action<TType> stubAction, params TypedInjectionValue[] resolveParamOverrides)
+        {
+            var actionWrap = new StubActionGeneric<TType>(stubAction);
+            SetStrategy<PartialRhinoMocksBuilderStrategy>(typeof(TType), false, "", actionWrap, resolveParamOverrides);
+        }
+
         public void RegisterPartialMockType<TBaseType, TImplType>(Action<TImplType> stubAction)
         {
             var actionWrap = new StubActionGeneric<TImplType>(stubAction);
