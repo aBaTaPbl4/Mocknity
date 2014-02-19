@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Practices.Unity;
+using Microsoft.Practices.Unity.ObjectBuilder;
 
 namespace Microsoft.Practices.ObjectBuilder2
 {
@@ -28,6 +29,7 @@ namespace Microsoft.Practices.ObjectBuilder2
         private readonly IPolicyList persistentPolicies;
         readonly IPolicyList policies;
         private readonly CompositeResolverOverride resolverOverrides = new CompositeResolverOverride();
+        private IUnityContainer resolvedFromContainer;
 
         /// <summary>
         /// Initialize a new instance of the <see cref="BuilderContext"/> class.
@@ -213,7 +215,7 @@ namespace Microsoft.Practices.ObjectBuilder2
         public object NewBuildUp(NamedTypeBuildKey newBuildKey)
         {
             this.ChildContext =
-                new BuilderContext(chain, lifetime, persistentPolicies, policies, newBuildKey, null);
+                new BuilderContext(chain, lifetime, persistentPolicies, policies, newBuildKey, null){ResolvedFromContainer = this.ResolvedFromContainer};
 
             ChildContext.AddResolverOverrides(Sequence.Collect(resolverOverrides));
 
@@ -237,7 +239,7 @@ namespace Microsoft.Practices.ObjectBuilder2
         public object NewBuildUp(NamedTypeBuildKey newBuildKey, Action<IBuilderContext> childCustomizationBlock)
         {
             ChildContext =
-                new BuilderContext(chain, lifetime, persistentPolicies, policies, newBuildKey, null);
+                new BuilderContext(chain, lifetime, persistentPolicies, policies, newBuildKey, null) { ResolvedFromContainer = this.ResolvedFromContainer };
 
             ChildContext.AddResolverOverrides(Sequence.Collect(resolverOverrides));
 
@@ -248,6 +250,15 @@ namespace Microsoft.Practices.ObjectBuilder2
             ChildContext = null;
 
             return result;
+        }
+
+        /// <summary>
+        /// See interface
+        /// </summary>
+        public IUnityContainer ResolvedFromContainer
+        {
+            get { return resolvedFromContainer; }
+            set { resolvedFromContainer = value; }
         }
     }
 }

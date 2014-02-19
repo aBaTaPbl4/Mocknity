@@ -250,7 +250,7 @@ namespace Microsoft.Practices.Unity
                 Guard.ArgumentNotNull(o, "o");
 
                 context =
-                    new BuilderContext(GetStrategies().Reverse(), lifetimeContainer, policies, null, o);
+                    new BuilderContext(GetStrategies().Reverse(), lifetimeContainer, policies, null, o) { ResolvedFromContainer = this };
                 context.Strategies.ExecuteTearDown(context);
             }
             catch (Exception ex)
@@ -498,7 +498,7 @@ namespace Microsoft.Practices.Unity
                         lifetimeContainer,
                         policies,
                         new NamedTypeBuildKey(t, name),
-                        existing);
+                        existing){ResolvedFromContainer = this};
                 context.AddResolverOverrides(resolverOverrides);
 
                 if(t.IsGenericTypeDefinition)

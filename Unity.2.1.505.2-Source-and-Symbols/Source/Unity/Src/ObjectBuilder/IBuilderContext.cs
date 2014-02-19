@@ -102,6 +102,11 @@ namespace Microsoft.Practices.ObjectBuilder2
         IBuilderContext ChildContext { get; }
 
         /// <summary>
+        /// The container the type resolved from.
+        /// </summary>
+        IUnityContainer ResolvedFromContainer { get; }
+
+        /// <summary>
         /// Add a new set of resolver override objects to the current build operation.
         /// </summary>
         /// <param name="newOverrides"><see cref="ResolverOverride"/> objects to add.</param>

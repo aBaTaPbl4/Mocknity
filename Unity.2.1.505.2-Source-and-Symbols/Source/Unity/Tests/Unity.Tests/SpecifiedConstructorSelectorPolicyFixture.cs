@@ -184,6 +184,8 @@ namespace Microsoft.Practices.Unity.Tests
                 set { throw new NotImplementedException(); }
             }
 
+            public IUnityContainer ResolvedFromContainer { get; set; }
+
             public object NewBuildUp(NamedTypeBuildKey newBuildKey)
             {
                 throw new NotImplementedException();

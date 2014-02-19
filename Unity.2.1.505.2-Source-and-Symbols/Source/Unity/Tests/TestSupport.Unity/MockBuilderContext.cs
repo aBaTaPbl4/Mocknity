@@ -89,6 +89,8 @@ namespace Microsoft.Practices.Unity.TestSupport
 
         public IBuilderContext ChildContext { get; set; }
 
+        public IUnityContainer ResolvedFromContainer { get; set; }
+
         public void AddResolverOverrides(IEnumerable<ResolverOverride> newOverrides)
         {
             resolverOverrides.AddRange(newOverrides);

@@ -858,6 +858,66 @@ namespace MocknityTests
             CheckObjectIsPartialMock(obj);
         }
 
+        //ParentIoc(-) ----> ParentMocknity(+)
+        //    |
+        //ChildIoc(+) -----> ChildMocknity(-)
+        [TestMethod]
+        public void If_TypeRegisetered_In_RootMocknity_And_In_Child_Ioc_ShouldReturnType_FromIoc()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);
+
+            rootMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            childContainer.RegisterType<IFirstObject, FirstObjectImpl>();
+            var obj = childContainer.Resolve<IFirstObject>();
+            CheckObjectIsReal(obj);
+        }
+
+        //ParentIoc(-) ----> ParentMocknity(+)
+        //    |
+        //ChildIoc1(+) -----> ChildMocknity1(-)
+        //
+        //ChildIoc2(-) -----> ChildMocknity2(-)
+        [TestMethod]
+        public void If_TypeRegisetered_In_RootMocknity_And_In_Middle_Child_Ioc_ShouldReturnType_FromMiddleIoc()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity1;
+            IUnityContainer childContainer1;
+            InitChildContainer(out childContainer1, out childMocknity1);
+
+            MocknityContainerExtension childMocknity2;
+            IUnityContainer childContainer2;
+            InitChildContainer(out childContainer2, out childMocknity2, childContainer1);
+
+            rootMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            childContainer1.RegisterType<IFirstObject, FirstObjectImpl>();
+            var obj = childContainer2.Resolve<IFirstObject>();
+            CheckObjectIsReal(obj);
+        }
+
+        //ParentIoc(+) ----> ParentMocknity(-)
+        //    |
+        //ChildIoc(-) -----> ChildMocknity(+)
+        [TestMethod]
+        public void If_TypeRegisetered_In_ChildMocknity_And_In_RootIoc_ShouldReturnType_FromMocknity()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);
+
+            rootContainer.RegisterType<IFirstObject, FirstObjectImpl>();
+            childMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            var obj = childContainer.Resolve<IFirstObject>();
+            CheckObjectIsPartialMock(obj);
+        }
+
         [TestMethod]
         public void AllowTwoRegistration_InDifferentExtensions_Test()
         {

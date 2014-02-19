@@ -112,7 +112,11 @@ namespace Mocknity.Strategies.Structure
                 return;
             }
 
-            if (!mocknity.getContainer().IsRegisteredPrivate(buildKey.Type))
+            bool isTypeRegisteredInMocknityContainer = mocknity.getContainer().IsRegisteredPrivate(buildKey.Type);
+            bool isTypeRegisteredInResolveCalledFromContainer = context.ResolvedFromContainer.IsRegisteredPrivate(buildKey.Type);
+            bool isTypeRegisteredBetweenMocknityAndResolveContainer = IsTypeRegisteredUnderMocknityContainer(context.ResolvedFromContainer, buildKey.Type);
+
+            if (!isTypeRegisteredInMocknityContainer && !isTypeRegisteredInResolveCalledFromContainer && !isTypeRegisteredBetweenMocknityAndResolveContainer)
             {
                 Type typeToSearch = buildKey.Type.IsInterface ? buildKey.Type : _implType;
                 if (OnlyOneMockCreation)
@@ -132,6 +136,36 @@ namespace Mocknity.Strategies.Structure
                 }
                 context.BuildComplete = false;
             }
+        }
+
+        /// <summary>
+        /// Is type registered in any unity container located under mocknity container but before bottomContainer. 
+        /// </summary>
+        /// <param name="bottomContainer">Container the type was resolved from</param>
+        /// <returns></returns>
+        private bool IsTypeRegisteredUnderMocknityContainer(IUnityContainer bottomContainer, Type typeToFind)
+        {
+            IUnityContainer mocknityContainer = mocknity.getContainer();
+            if (mocknityContainer == bottomContainer)
+            {
+                return false;//no contianers between mocknityContainer and bottomContainer
+            }
+            IUnityContainer curContainer = bottomContainer.Parent;
+            if (curContainer == null || curContainer == mocknityContainer)
+            {
+                return false; //no contianers between mocknityContainer and bottomContainer
+            }
+
+            while (curContainer != null && curContainer != mocknityContainer)
+            {
+                if (curContainer.IsRegisteredPrivate(typeToFind))
+                {
+                    return true;
+                }
+                curContainer = curContainer.Parent;
+            }
+            return false;
+
         }
 
         private object RegisterMock(NamedTypeBuildKey buildKey)
