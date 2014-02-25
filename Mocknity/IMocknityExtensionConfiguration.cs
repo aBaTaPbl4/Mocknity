@@ -16,6 +16,8 @@ namespace Mocknity
         /// Replay mock during resolving, if stub behiviour is set during registration
         /// </summary>
         bool AutoReplayStubbedMocks { get; set; }
+
+        bool AutoReplayStubs { get; set; }
         void SetStrategy<T>(Type type, bool oneMockCreate = true, string name = "", StubAction stubAction = null, params TypedInjectionValue[] resolveParams);
 
         bool CheckStrategyMapping<T>(Type type, string name);

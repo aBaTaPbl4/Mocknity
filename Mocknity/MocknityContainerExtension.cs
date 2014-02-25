@@ -27,6 +27,7 @@ namespace Mocknity
             MockUnregisteredInterfaces = mockUnregisteredInterfaces;
             AutoReplayPartialMocks = true;
             AutoReplayStubbedMocks = true;
+            AutoReplayStubs = true;
         }
 
         #region IMocknityExtensionConfiguration Members
@@ -139,6 +140,7 @@ namespace Mocknity
         public bool MockUnregisteredInterfaces { get; set; }
 
         public bool AutoReplayPartialMocks { get; set; }
+        public bool AutoReplayStubs { get; set; }
         public bool AutoReplayStubbedMocks { get; set; }
 
         #endregion

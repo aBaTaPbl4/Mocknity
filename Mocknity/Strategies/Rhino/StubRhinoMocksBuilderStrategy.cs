@@ -1,4 +1,5 @@
 ﻿using System;
+using Rhino.Mocks;
 
 namespace Mocknity.Strategies.Rhino
 {
@@ -13,6 +14,10 @@ namespace Mocknity.Strategies.Rhino
         {
             var mock = repository.Stub(type);
             Stub(mock);
+            if (mocknity.AutoReplayStubs)
+            {
+                mock.Replay();    
+            }            
             return mock;
         }
 
@@ -20,6 +25,10 @@ namespace Mocknity.Strategies.Rhino
         {
             var mock = repository.Stub(type, GetConstructorArguments(type));
             Stub(mock);
+            if (mocknity.AutoReplayStubs)
+            {
+                mock.Replay();
+            }
             return mock;
         }
     }
