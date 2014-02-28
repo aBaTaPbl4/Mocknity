@@ -21,7 +21,7 @@ using System.Security;
 [assembly: AssemblyTitle("Microsoft.Practices.Unity.InterceptionExtension")]
 [assembly: AssemblyDescription("Interception support for the Unity Application Block")]
 
-[assembly: CLSCompliant(true)]
+[assembly: CLSCompliant(false)]
 [assembly: ComVisible(false)]
 [assembly: AssemblyProduct("Microsoft Unity Application Block")]
 [assembly: AssemblyCompany("Microsoft Corporation")]
