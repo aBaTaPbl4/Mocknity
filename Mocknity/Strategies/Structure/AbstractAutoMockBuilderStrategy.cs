@@ -47,7 +47,7 @@ namespace Mocknity.Strategies.Structure
             }
         }
 
-        protected TypedInjectionValue GetOverridenParameter(Type paramType)
+        protected TypedInjectionValue GetOverridenParameterAtRegistration(Type paramType)
         {
             if (ConstructorParameters == null || 
                 ConstructorParameters.Length == 0 ||
@@ -62,12 +62,18 @@ namespace Mocknity.Strategies.Structure
             int previousIndex = _typeIndexMap[paramType];
             int currentIndex = previousIndex + 1;
             var overridenParams = ConstructorParameters.Where(x => x.ParameterType == paramType).ToList();
+            TypedInjectionValue result = null;
             if (overridenParams.Count < currentIndex + 1)
             {
-                return overridenParams[previousIndex];
+                result = overridenParams[previousIndex];
             }
-            _typeIndexMap[paramType]++;
-            return overridenParams[currentIndex];
+            else
+            {
+                _typeIndexMap[paramType]++;
+                result = overridenParams[currentIndex];
+            }
+                        
+            return result;
         }
 
         #region IAutoMockBuilderStrategy Members

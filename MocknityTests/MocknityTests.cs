@@ -28,6 +28,15 @@ namespace MocknityTests
         string HelloWorld();
     }
 
+    public class SecondObjectImpl : ISecondObject
+    {
+        public int MyProperty { get; set; }
+        public string HelloWorld()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class FirstObjectImpl : IFirstObject
     {
         #region IFirstObject Members
@@ -1065,17 +1074,62 @@ namespace MocknityTests
             Assert.AreEqual("t", obj.IntroduceYourself());
         }
 
-        private void CheckObjectIsReal(IFirstObject obj)
+        [TestMethod]
+        public void WhenOverridenDependencySuplied_MocknityShouldConfigureTheMockByIt()
+        {
+            
+            _mocknity.RegisterPartialMockType<ObjectWithDependencies>();
+            _mocknity.RegisterDynamicMock<ISecondObject>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+
+            var obj = _ioc.Resolve<ObjectWithDependencies>(new DependencyOverride<IFirstObject>(_mocks.DynamicMock<IFirstObject>()));
+            CheckObjectIsMock(obj.firstObject);
+            CheckObjectIsMock(obj.secondObject);
+        }
+
+        [TestMethod]
+        public void WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt_ViaResolvedParameterUsing()
+        {
+            _ioc.RegisterType<ObjectWithDependencies>(
+                new InjectionConstructor(new ResolvedParameter<IFirstObject>(),
+                new ResolvedParameter<ISecondObject>()));
+
+            WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt();
+        }
+
+        [TestMethod]
+        public void WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt_ViaInjectionParameterUsing()
+        {
+            _ioc.RegisterType<ObjectWithDependencies>(
+                new InjectionConstructor(new InjectionParameter<IFirstObject>(null),
+                new InjectionParameter<ISecondObject>(null)));
+
+            WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt();
+        }
+
+        private void WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt()
+        {
+            _ioc.RegisterType<ISecondObject, SecondObjectImpl>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+
+            var obj = _ioc.Resolve<ObjectWithDependencies>(
+                new ParameterOverride("firstObject", _mocks.DynamicMock<IFirstObject>()),
+                new ParameterOverride("secondObject", _mocks.DynamicMock<ISecondObject>()));
+            CheckObjectIsMock(obj.firstObject);
+            CheckObjectIsMock(obj.secondObject);
+        }
+
+        private void CheckObjectIsReal(object obj)
         {
             MockObjectCheck(obj, false);
         }
 
-        private void CheckObjectIsMock(IFirstObject obj)
+        private void CheckObjectIsMock(object obj)
         {
             MockObjectCheck(obj, true);
         }
 
-        private void MockObjectCheck(IFirstObject obj, bool expectedMock)
+        private void MockObjectCheck(object obj, bool expectedMock)
         {
             bool isMocked = obj is IMockedObject;
             string errMessage;

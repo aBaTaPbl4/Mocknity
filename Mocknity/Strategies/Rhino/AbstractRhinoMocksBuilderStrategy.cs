@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Practices.ObjectBuilder2;
 using Microsoft.Practices.Unity;
 using Mocknity.Strategies.Structure;
 using Rhino.Mocks;
@@ -36,7 +37,13 @@ namespace Mocknity.Strategies.Rhino
             int counter = 0;
             foreach (ParameterInfo parameterInfo in constructorParameters)
             {
-                TypedInjectionValue overridenParam = base.GetOverridenParameter(parameterInfo.ParameterType);
+                object paramValue = GetOverridenParameterAtResolve(parameterInfo.ParameterType);
+                if (paramValue != null)
+                {
+                    arguments[counter++] = paramValue;
+                    continue;
+                }
+                TypedInjectionValue overridenParam = base.GetOverridenParameterAtRegistration(parameterInfo.ParameterType);
                 if (overridenParam == null)
                 {
                     arguments[counter++] = unityContainer.Resolve(parameterInfo.ParameterType, string.Empty);    
@@ -49,6 +56,16 @@ namespace Mocknity.Strategies.Rhino
                 
             }
             return arguments;
+        }
+
+        object GetOverridenParameterAtResolve(Type paramType)
+        {
+            IDependencyResolverPolicy resolver = BuilderContext.GetOverriddenResolver(paramType);
+            if (resolver == null)
+            {
+                return null;
+            }
+            return resolver.Resolve(BuilderContext);
         }
 
         protected void InitDependencyProperties(object mock, Type type)
