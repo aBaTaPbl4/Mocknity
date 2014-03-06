@@ -119,7 +119,11 @@ namespace Mocknity
                 mocks[name] = new Dictionary<Type, object>();
             }
             var mcks = mocks[name];
-            mcks.Add(type, mock);
+            if (!mcks.ContainsKey(type))
+            {
+                mcks.Add(type, mock);    
+            }
+            
         }
 
         public bool IsTypeMapped(Type type, string name)

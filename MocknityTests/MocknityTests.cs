@@ -1107,6 +1107,17 @@ namespace MocknityTests
             WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt();
         }
 
+        [TestMethod]
+        public void WhenMockRegesteredUnderBaseAndDerivedType_ResolveShouldReturnSameInstances()
+        {
+            _mocknity.RegisterDynamicMock<IFirstObject>();
+            _mocknity.RegisterDynamicMock<IFirstObject, FirstObjectImpl>();
+            var mock1 = _ioc.Resolve<IFirstObject>();
+            var mock2 = _ioc.Resolve<FirstObjectImpl>();
+            Assert.AreNotEqual(mock1, mock2, "Mocks Are The Same! mock1 type:{0}, mock2 type:{1}", 
+                mock1.GetType().Name, mock2.GetType().Name);
+        }
+
         private void WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt()
         {
             _ioc.RegisterType<ISecondObject, SecondObjectImpl>();
