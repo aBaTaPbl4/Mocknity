@@ -1007,6 +1007,25 @@ namespace MocknityTests
             CheckObjectIsPartialMock(obj);
         }
 
+        //ParentIoc(-) ----> ParentMocknity(PartialMock)
+        //    |
+        //ChildIoc(-) -----> ChildMocknity(DynamicMock)
+        [TestMethod]
+        public void PartialMockIn_TopMocknity_ShouldNotBrokeResolve_DynamicMock_FromLowLevlelMocknity()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);
+
+            rootMocknity.RegisterPartialMock<IFirstObject, FirstObjectImpl>();
+            childMocknity.RegisterDynamicMock<IFirstObject>();
+
+            var obj = childContainer.Resolve<IFirstObject>();
+            Assert.IsNotNull(obj);
+        }
+
         [TestMethod]
         public void AllowTwoRegistration_InDifferentExtensions_Test()
         {

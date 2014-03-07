@@ -28,8 +28,6 @@ namespace Mocknity.Strategies.Rhino
         {
             object[] parms = GetConstructorArguments(type);
             object mock = repository.PartialMock(type, parms);
-            //we need to reset BuildKey with real type, to make unity to configure objects in later stage (init dependcy properties, injection method etc.
-            BuilderContext.BuildKey = new NamedTypeBuildKey(type, BuilderContext.BuildKey.Name);
             Stub(mock);
             if (mocknity.AutoReplayPartialMocks)
             {

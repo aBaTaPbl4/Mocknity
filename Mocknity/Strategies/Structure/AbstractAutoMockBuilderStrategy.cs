@@ -189,26 +189,37 @@ namespace Mocknity.Strategies.Structure
         private object CreateMock(NamedTypeBuildKey buildKey)
         {
             object mock = null;
+            Type mockedType = null;
             if (buildKey.Type.IsInterface)
             {
                 bool arrivedInterfaceButWeHaveImplType = _implType != null && _implType != buildKey.Type;
                 if (arrivedInterfaceButWeHaveImplType)
                 {
+                    mockedType = _implType;
                     mock = CreateMockByType(_implType);
                 }
                 if (mock == null)
                 {
+                    mockedType = buildKey.Type;
                     mock = CreateMockByInterface(buildKey.Type);
                 }
             }
             else
             {
+                mockedType = _implType;
                 mock = CreateMockByType(_implType);
 
             }
+            //we need to reset BuildKey with real type, to make unity to configure objects in later stage (init dependcy properties, injection method etc.
+            UpdateBuildKey(mockedType);
             return mock;
         }
 
         public abstract object CreateMockByType(Type type);
+
+        protected void UpdateBuildKey(Type type)
+        {
+            BuilderContext.BuildKey = new NamedTypeBuildKey(type, BuilderContext.BuildKey.Name);
+        }
     }
 }
