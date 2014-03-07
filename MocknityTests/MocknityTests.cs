@@ -1024,6 +1024,7 @@ namespace MocknityTests
 
             var obj = childContainer.Resolve<IFirstObject>();
             Assert.IsNotNull(obj);
+            Assert.IsNull(obj.IntroduceYourself()); //is dynamic mock
         }
 
         [TestMethod]
