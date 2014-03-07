@@ -68,20 +68,6 @@ namespace Mocknity.Strategies.Rhino
             return resolver.Resolve(BuilderContext);
         }
 
-        protected void InitDependencyProperties(object mock, Type type)
-        {
-            List<PropertyInfo> props = type.GetProperties().Where(
-                prop => Attribute.IsDefined(prop, typeof(DependencyAttribute))).ToList();
-            foreach (var propertyInfo in props)
-            {
-                DependencyAttribute attrib = Attribute.GetCustomAttribute(
-                                                            propertyInfo, 
-                                                            typeof(DependencyAttribute)) as DependencyAttribute;
-                string typeRegistrationName = attrib == null ? string.Empty : attrib.Name ?? string.Empty;
-                propertyInfo.SetValue(mock, unityContainer.Resolve(propertyInfo.PropertyType, typeRegistrationName), null);
-            }
-        }
-        
         /// Gets the greediest constructor.
         /// The constructor infos.
         /// Greediest constructor.

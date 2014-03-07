@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Contexts;
+using Microsoft.Practices.ObjectBuilder2;
 using Rhino.Mocks;
 using Microsoft.Practices.Unity;
 
@@ -26,7 +28,8 @@ namespace Mocknity.Strategies.Rhino
         {
             object[] parms = GetConstructorArguments(type);
             object mock = repository.PartialMock(type, parms);
-            InitDependencyProperties(mock, type);
+            //we need to reset BuildKey with real type, to make unity to configure objects in later stage (init dependcy properties, injection method etc.
+            BuilderContext.BuildKey = new NamedTypeBuildKey(type, BuilderContext.BuildKey.Name);
             Stub(mock);
             if (mocknity.AutoReplayPartialMocks)
             {

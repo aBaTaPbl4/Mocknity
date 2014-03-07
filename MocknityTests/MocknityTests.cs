@@ -137,10 +137,31 @@ namespace MocknityTests
 
     }
 
-    public class ObjectWithPropDependency
+    public interface IObjectWithPropDependency
     {
+        int SetWasCalledCount { get; }
+    }
+
+    public class ObjectWithPropDependency : IObjectWithPropDependency
+    {
+        private int _setWasCalledCount = 0;
+        private IFirstObject _obj;
+
+        public int SetWasCalledCount
+        {
+            get { return _setWasCalledCount; }
+        }
+
         [Dependency]
-        public IFirstObject Obj { get; set; }
+        public IFirstObject Obj
+        {
+            get { return _obj; }
+            set
+            {
+                _obj = value;
+                _setWasCalledCount++;
+            }
+        }
 
         [Dependency("FirstObjectImpl3")]
         public IFirstObject ObjNamed { get; set; }
@@ -165,6 +186,32 @@ namespace MocknityTests
             Id1 = id1;
             SecondObj = secondObj;
             Id2 = id2;
+        }
+    }
+
+    public interface IClassWithInjectionMethod
+    {
+        bool IsInjectionMethodCalled { get; }
+    }
+
+    public class ClassWithInjectionMethod : IClassWithInjectionMethod
+    {
+        private bool _isInjectionMethodCalled;
+
+        public ClassWithInjectionMethod()
+        {
+            _isInjectionMethodCalled = false;
+        }
+
+        [InjectionMethod]
+        public void Init()
+        {
+            _isInjectionMethodCalled = true;
+        }
+
+        public bool IsInjectionMethodCalled
+        {
+            get { return _isInjectionMethodCalled; }
         }
     }
 
@@ -677,6 +724,39 @@ namespace MocknityTests
         }
 
         [TestMethod]
+        public void DependencyProperties_ShouldBeInitializedOnes_ByMockResolve()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl3>("FirstObjectImpl3");
+            _mocknity.RegisterPartialMock<ObjectWithPropDependency>();
+            var mock = _ioc.Resolve<ObjectWithPropDependency>();
+            Assert.AreEqual(1, mock.SetWasCalledCount, "Property was init {0} times!", mock.SetWasCalledCount);
+        }
+
+        [TestMethod]
+        public void DependencyProperties_ShouldBeInitializedOnes_ByMockInterfaceResolve_WhenMockUnregisteredInterfacesOff()
+        {
+            _mocknity.MockUnregisteredInterfaces = false;
+            DependencyProperties_ShouldBeInitializedOnes_ByMockInterfaceResolve();
+        }
+
+        [TestMethod]
+        public void DependencyProperties_ShouldBeInitializedOnes_ByMockInterfaceResolve_WhenMockUnregisteredInterfacesOn()
+        {
+            _mocknity.MockUnregisteredInterfaces = true;
+            DependencyProperties_ShouldBeInitializedOnes_ByMockInterfaceResolve();
+        }
+
+        public void DependencyProperties_ShouldBeInitializedOnes_ByMockInterfaceResolve()
+        {
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
+            _ioc.RegisterType<IFirstObject, FirstObjectImpl3>("FirstObjectImpl3");
+            _mocknity.RegisterPartialMock<IObjectWithPropDependency, ObjectWithPropDependency>();
+            var mock = _ioc.Resolve<IObjectWithPropDependency>();
+            Assert.AreEqual(1, mock.SetWasCalledCount, "Property was called wrong times count!");            
+        }
+
+        [TestMethod]
         public void NamedDependencyProperties_ShouldBeInitialized_ByMockResolve()
         {
             _ioc.RegisterType<IFirstObject, FirstObjectImpl>();
@@ -1116,6 +1196,33 @@ namespace MocknityTests
             var mock2 = _ioc.Resolve<FirstObjectImpl>();
             Assert.AreNotEqual(mock1, mock2, "Mocks Are The Same! mock1 type:{0}, mock2 type:{1}", 
                 mock1.GetType().Name, mock2.GetType().Name);
+        }
+
+        [TestMethod]
+        public void DuringPartialMockResolving_ByImpType_InjectionMethodShouldBeCalled()
+        {
+            _mocknity.RegisterPartialMock<ClassWithInjectionMethod>();
+            var instance = _ioc.Resolve<ClassWithInjectionMethod>();
+            CheckObjectIsMock(instance);
+            Assert.IsTrue(instance.IsInjectionMethodCalled, "Injection method was not called!");
+        }
+
+        [TestMethod]
+        public void DuringPartialMockResolving_ByInteface_InjectionMethodShouldBeCalled()
+        {
+            _mocknity.RegisterPartialMock<IClassWithInjectionMethod, ClassWithInjectionMethod>();
+            var instance = _ioc.Resolve<IClassWithInjectionMethod>();
+            CheckObjectIsMock(instance);
+            Assert.IsTrue(instance.IsInjectionMethodCalled, "Injection method was not called!");
+        }
+
+        [TestMethod]
+        public void DuringTypeResolving_ByInteface_InjectionMethodShouldBeCalled()
+        {
+            _ioc.RegisterType<IClassWithInjectionMethod, ClassWithInjectionMethod>();
+            var instance = _ioc.Resolve<IClassWithInjectionMethod>();
+            CheckObjectIsReal(instance);
+            Assert.IsTrue(instance.IsInjectionMethodCalled, "Injection method was not called!");
         }
 
         private void WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt()
