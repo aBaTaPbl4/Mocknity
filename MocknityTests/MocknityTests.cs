@@ -1125,6 +1125,59 @@ namespace MocknityTests
 
         #endregion
 
+        #region unity befaviour tests
+
+        [TestMethod]
+        public void UnityShouldTryResolveDependency_FromChildContainer_First_WhenResolvedTypeNotRegistered()
+        {
+            IUnityContainer rootContainer = new UnityContainer();
+            IUnityContainer childContainer = rootContainer.CreateChildContainer();
+
+            rootContainer.RegisterInstance<IFirstObject>(new FirstObjectImpl());
+            rootContainer.RegisterType<ISecondObject, SecondObjectImpl>();
+            childContainer.RegisterInstance<IFirstObject>(MockRepository.GenerateMock<IFirstObject>());
+
+            var obj = childContainer.Resolve<ObjectWithDependencies>();
+
+            CheckObjectIsMock(obj.firstObject);//should return mock
+        }
+
+        [TestMethod]
+        public void UnityShouldTryResolveDependency_FromChildContainer_First_WhenResolvedTypeRegisteredInRootContainer()
+        {
+            IUnityContainer rootContainer = new UnityContainer();
+            IUnityContainer childContainer = rootContainer.CreateChildContainer();
+
+            rootContainer.RegisterInstance<IFirstObject>(new FirstObjectImpl());
+            rootContainer.RegisterType<ISecondObject, SecondObjectImpl>();
+            childContainer.RegisterInstance<IFirstObject>(MockRepository.GenerateMock<IFirstObject>());
+
+            rootContainer.RegisterType<ObjectWithDependencies>();
+
+            var obj = childContainer.Resolve<ObjectWithDependencies>();
+
+            CheckObjectIsMock(obj.firstObject);//should return mock
+        }
+
+        [TestMethod]
+        public void UnityShouldTryResolveDependency_FromChildContainer_First_WhenResolvedTypeRegisteredInChildContainer()
+        {
+            IUnityContainer rootContainer = new UnityContainer();
+            IUnityContainer childContainer = rootContainer.CreateChildContainer();
+
+            rootContainer.RegisterInstance<IFirstObject>(new FirstObjectImpl());
+            rootContainer.RegisterType<ISecondObject, SecondObjectImpl>();
+            childContainer.RegisterInstance<IFirstObject>(MockRepository.GenerateMock<IFirstObject>());
+
+            childContainer.RegisterType<ObjectWithDependencies>();
+
+            var obj = childContainer.Resolve<ObjectWithDependencies>();
+
+            CheckObjectIsMock(obj.firstObject);//should return mock
+        }
+
+        #endregion
+
 
         [TestMethod]
         public void RegisterPartialMockType_WithDefinedStubBehaviour_Should_Work()
