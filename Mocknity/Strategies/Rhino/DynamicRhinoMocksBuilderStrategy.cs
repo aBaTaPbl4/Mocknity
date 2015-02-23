@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Practices.ObjectBuilder2;
 
 namespace Mocknity.Strategies.Rhino
 {
@@ -16,9 +17,9 @@ namespace Mocknity.Strategies.Rhino
             return mock;
         }
 
-        public override object CreateMockByType(Type type)
+        public override object CreateMockByType(Type type, IBuilderContext context)
         {
-            var mock = repository.DynamicMock(type, GetConstructorArguments(type));
+            var mock = repository.DynamicMock(type, GetConstructorArguments(type, context));
             Stub(mock);
             return mock;
         }

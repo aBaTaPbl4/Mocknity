@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Practices.ObjectBuilder2;
 using Rhino.Mocks;
 
 namespace Mocknity.Strategies.Rhino
@@ -21,9 +22,9 @@ namespace Mocknity.Strategies.Rhino
             return mock;
         }
 
-        public override object CreateMockByType(Type type)
+        public override object CreateMockByType(Type type, IBuilderContext context)
         {
-            var mock = repository.Stub(type, GetConstructorArguments(type));
+            var mock = repository.Stub(type, GetConstructorArguments(type, context));
             Stub(mock);
             if (mocknity.AutoReplayStubs)
             {

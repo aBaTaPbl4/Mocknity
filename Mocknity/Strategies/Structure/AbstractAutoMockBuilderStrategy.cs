@@ -33,7 +33,6 @@ namespace Mocknity.Strategies.Structure
         public StubAction StubAction { get; set; }
 
         public TypedInjectionValue[] ConstructorParameters { get; set; }
-        protected IBuilderContext BuilderContext { get; private set; }
 
         protected void Stub(object mock)
         {
@@ -83,8 +82,7 @@ namespace Mocknity.Strategies.Structure
         #endregion
 
         public override void PreBuildUp(IBuilderContext context)
-        {
-            BuilderContext = context;
+        {            
             NamedTypeBuildKey buildKey = context.OriginalBuildKey;
             bool needToRegisterIfUnknown = mocknity.MockUnregisteredInterfaces && buildKey.Type.IsInterface;
             if (!mocknity.IsTypeMapped(buildKey.Type, Name) && !needToRegisterIfUnknown)
@@ -133,12 +131,12 @@ namespace Mocknity.Strategies.Structure
                     }
                     else
                     {
-                        context.Existing = RegisterMock(buildKey);
+                        context.Existing = RegisterMock(buildKey, context);
                     }
                 }
                 else //multiple mocks case:registration is not required
                 {
-                    context.Existing = CreateMock(buildKey);
+                    context.Existing = CreateMock(buildKey, context);
                 }
                 context.BuildComplete = false;
             }
@@ -174,9 +172,9 @@ namespace Mocknity.Strategies.Structure
 
         }
 
-        private object RegisterMock(NamedTypeBuildKey buildKey)
+        private object RegisterMock(NamedTypeBuildKey buildKey, IBuilderContext context)
         {
-            var mock = CreateMock(buildKey);
+            var mock = CreateMock(buildKey, context);
             var baseType = _baseType ?? buildKey.Type;
             mocknity.AddMock(baseType , mock, Name);
             if (_implType != null && _implType != baseType)
@@ -186,7 +184,7 @@ namespace Mocknity.Strategies.Structure
             return mock;
         }
 
-        private object CreateMock(NamedTypeBuildKey buildKey)
+        private object CreateMock(NamedTypeBuildKey buildKey, IBuilderContext context)
         {
             object mock = null;
             Type mockedType = null;
@@ -196,7 +194,7 @@ namespace Mocknity.Strategies.Structure
                 if (arrivedInterfaceButWeHaveImplType)
                 {
                     mockedType = _implType;
-                    mock = CreateMockByType(_implType);
+                    mock = CreateMockByType(_implType, context);
                 }
                 if (mock == null)
                 {
@@ -207,19 +205,19 @@ namespace Mocknity.Strategies.Structure
             else
             {
                 mockedType = _implType;
-                mock = CreateMockByType(_implType);
+                mock = CreateMockByType(_implType, context);
 
             }
             //we need to reset BuildKey with real type, to make unity to configure objects in later stage (init dependcy properties, injection method etc.
-            UpdateBuildKey(mockedType);
+            UpdateBuildKey(mockedType, context);
             return mock;
         }
 
-        public abstract object CreateMockByType(Type type);
+        public abstract object CreateMockByType(Type type, IBuilderContext cotnext);
 
-        protected void UpdateBuildKey(Type type)
+        protected void UpdateBuildKey(Type type, IBuilderContext context)
         {
-            BuilderContext.BuildKey = new NamedTypeBuildKey(type, BuilderContext.BuildKey.Name);
+            context.BuildKey = new NamedTypeBuildKey(type, context.BuildKey.Name);
         }
     }
 }

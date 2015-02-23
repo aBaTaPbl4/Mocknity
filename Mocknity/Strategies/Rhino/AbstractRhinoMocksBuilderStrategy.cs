@@ -21,7 +21,7 @@ namespace Mocknity.Strategies.Rhino
             unityContainer = mocknity.getContainer();
         }
 
-        protected object[] GetConstructorArguments(Type serviceType)
+        protected object[] GetConstructorArguments(Type serviceType, IBuilderContext context)
         {
             ConstructorInfo constructorInfo;
             try
@@ -37,7 +37,7 @@ namespace Mocknity.Strategies.Rhino
             int counter = 0;
             foreach (ParameterInfo parameterInfo in constructorParameters)
             {
-                object paramValue = GetOverridenParameterAtResolve(parameterInfo.ParameterType);
+                object paramValue = GetOverridenParameterAtResolve(parameterInfo.ParameterType, context);
                 if (paramValue != null)
                 {
                     arguments[counter++] = paramValue;
@@ -51,21 +51,21 @@ namespace Mocknity.Strategies.Rhino
                 else
                 {
                     var resolvePolicy = overridenParam.GetResolverPolicy(parameterInfo.ParameterType);
-                    arguments[counter++] = resolvePolicy.Resolve(BuilderContext);
+                    arguments[counter++] = resolvePolicy.Resolve(context);
                 }
                 
             }
             return arguments;
         }
 
-        object GetOverridenParameterAtResolve(Type paramType)
+        object GetOverridenParameterAtResolve(Type paramType, IBuilderContext context)
         {
-            IDependencyResolverPolicy resolver = BuilderContext.GetOverriddenResolver(paramType);
+            IDependencyResolverPolicy resolver = context.GetOverriddenResolver(paramType);
             if (resolver == null)
             {
                 return null;
             }
-            return resolver.Resolve(BuilderContext);
+            return resolver.Resolve(context);
         }
 
         /// Gets the greediest constructor.

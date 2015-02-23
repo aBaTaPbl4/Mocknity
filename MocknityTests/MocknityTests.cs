@@ -215,6 +215,24 @@ namespace MocknityTests
         }
     }
 
+    public class BallPoco
+    {
+        public string Type { get; set; }
+        public int SizeNumber { get; set; }
+    }
+
+    public class Football
+    {
+        public Football(BallPoco ball)
+        {
+            Ball = ball;
+        }
+
+        public BallPoco Ball { get; private set; }
+        
+
+    }
+
     #endregion
 
     [TestClass]
@@ -1297,6 +1315,25 @@ namespace MocknityTests
             CheckObjectIsReal(instance);
             Assert.IsTrue(instance.IsInjectionMethodCalled, "Injection method was not called!");
         }
+
+        [TestMethod]
+        public void param_override_should_work_when_resolving_partial_mock_from_mocknity_Test()
+        {
+            _mocknity.RegisterPartialMock<Football>();
+            TestOverrideDependency("football ball", 4);
+            //TestOverrideDependency("volleyball ball", 3);      //it would-not work, because mock create only once      
+        }
+
+        private void TestOverrideDependency(string ballType, int ballSize)
+        {
+            var ball = new BallPoco();
+            ball.Type = ballType;
+            ball.SizeNumber = ballSize;
+            var game = _ioc.Resolve<Football>(new DependencyOverride<BallPoco>(ball));
+            Assert.AreEqual(ballSize, game.Ball.SizeNumber);
+            CheckObjectIsMock(game);
+        }
+
 
         private void WhenOverridenParametersSuplied_MocknityShouldConfigureTheMockByIt()
         {

@@ -24,9 +24,9 @@ namespace Mocknity.Strategies.Rhino
             return mock;
         }
 
-        public override object CreateMockByType(Type type)
+        public override object CreateMockByType(Type type, IBuilderContext context)
         {
-            object[] parms = GetConstructorArguments(type);
+            object[] parms = GetConstructorArguments(type, context);
             object mock = repository.PartialMock(type, parms);
             Stub(mock);
             if (mocknity.AutoReplayPartialMocks)
