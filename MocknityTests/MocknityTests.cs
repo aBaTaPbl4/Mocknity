@@ -47,6 +47,17 @@ namespace MocknityTests
         #endregion
     }
 
+
+    public class ObjDependsOnIFirstObj
+    {
+        public IFirstObject Obj { get; }
+
+        public ObjDependsOnIFirstObj(IFirstObject obj)
+        {
+            Obj = obj;
+        }
+    }
+
     public interface IThirdObject
     {
         int MyProperty { get; set; }
@@ -953,6 +964,21 @@ namespace MocknityTests
 
             var obj = childContainer.Resolve<IFirstObject>();
             CheckObjectIsPartialMock(obj);
+        }
+
+        [Test, Description("https://github.com/aBaTaPbl4/Mocknity/issues/6")]
+        public void Test_By_Issue_6()
+        {
+            IUnityContainer rootContainer = _ioc;
+            MocknityContainerExtension rootMocknity = _mocknity;
+            MocknityContainerExtension childMocknity;
+            IUnityContainer childContainer;
+            InitChildContainer(out childContainer, out childMocknity);
+
+            rootContainer.RegisterType<IFirstObject, FirstObjectImpl>();
+            childMocknity.RegisterDynamicMock<IFirstObject>();
+            var dependant = childContainer.Resolve<ObjDependsOnIFirstObj>(); 
+            CheckObjectIsMock(dependant.Obj);
         }
 
         [Test]
