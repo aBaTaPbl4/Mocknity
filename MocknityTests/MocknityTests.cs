@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.Practices.Unity;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mocknity;
 using Mocknity.Strategies.Rhino;
+using NUnit.Framework;
 using Rhino.Mocks;
-using Rhino.Mocks.Constraints;
 using Rhino.Mocks.Exceptions;
 using Rhino.Mocks.Interfaces;
 
@@ -235,14 +233,14 @@ namespace MocknityTests
 
     #endregion
 
-    [TestClass]
+    [TestFixture]
     public class MocknityTests
     {
         private IUnityContainer _ioc;
         private MocknityContainerExtension _mocknity;
         private MockRepository _mocks;
 
-        [TestInitialize]
+        [SetUp]
         public void TestInitialize()
         {
             InitPrivateMembers(true);

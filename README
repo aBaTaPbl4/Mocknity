@@ -1,3 +1,4 @@
 Mocknity is an extension for Microsoft's Patterns & Practices Dependency Injection Container - Unity.
-This extension makes a Automocking Container from Unity's Container. It uses Rhino Mocks for creation of the mock objects.
-Please see the tests for more ...
+This extension makes a Automocking Container for Unity's Container. It uses Rhino Mocks for mock objects creation.
+Supply convinient way to register mock ojbects in unity with deffered creation of mock object.
+Please see the tests or quik start guide (https://github.com/aBaTaPbl4/Mocknity/wiki/Quick-Start) for details
