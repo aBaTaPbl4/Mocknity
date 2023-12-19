@@ -30,3 +30,5 @@ _ReSharper*/
 ~*.*
 *.snk
 .vs
+/Libs/x64/sign_assemblies.cmd
+/Libs/x86/sign_assemblies.cmd
