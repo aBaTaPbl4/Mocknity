@@ -14,7 +14,7 @@
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -60,10 +60,10 @@
     <NoWarn>618</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Veeam.Backup.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>nmulabs.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -229,6 +229,7 @@
     <Compile Include="Interceptors\TypeInterceptors\VirtualMethodInterception\VirtualMethodReturn.cs" />
     <None Include="Migrated rules for Unity.Interception %282%29.ruleset" />
     <None Include="Migrated rules for Unity.Interception.ruleset" />
+    <None Include="nmulabs.snk" />
     <None Include="Veeam.Backup.snk" />
   </ItemGroup>
   <ItemGroup>
